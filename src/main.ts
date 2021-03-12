@@ -15,11 +15,9 @@ async function bootstrap() {
   );
 
   app.setGlobalPrefix('api');
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-    }),
-  );
+  app.useStaticAssets({ root: `${__dirname}/public` });
+  app.enableCors();
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new IAuthGuard(reflector));

@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import User from 'src/entity/User';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { IResponse } from 'src/type';
-import { SignUpDto, UpdateUserDto } from './user.dto';
+import { delAnyUserInfo, SignUpDto, UpdateUserDto } from './user.dto';
 import { AuthService } from 'src/auth/auth.service';
+import fetch from 'node-fetch';
+import * as FormData from 'form-data';
 
 @Injectable()
 export class UserService {
@@ -21,19 +23,21 @@ export class UserService {
       return { code: 400, msg: '两次密码输入不一致' };
     }
 
-    const user = await this.findOne(email);
+    const user = await this.findOneByEmail(email);
     if (user) {
       return { code: 400, msg: '用户已存在' };
     }
     const hash = this.authService.hashUserPwd(password);
+    const u = await this.usersRepository
+      .create({
+        email: email,
+        password: hash.digest('hex'),
+      })
+      .save();
+
     return {
-      data: await this.usersRepository
-        .create({
-          email: email,
-          password: hash.digest('hex'),
-        })
-        .save(),
-      code: 200,
+      data: delAnyUserInfo(u),
+      code: 201,
     };
   }
 
@@ -54,16 +58,43 @@ export class UserService {
     }
   }
 
-  async findOne(id: string): Promise<User | undefined> {
+  findOne(id: string): Promise<User | undefined> {
     return this.usersRepository.findOne(id);
   }
 
-  async findOneByEmail(email: string): Promise<User | undefined> {
+  findOneByEmail(email: string): Promise<User | undefined> {
     return this.usersRepository.findOne({ email });
   }
 
-  update({ id, ...param }: UpdateUserDto) {
-    this.usersRepository.update(id, param);
+  findOneByUsername(username: string): Promise<User | undefined> {
+    return this.usersRepository.findOne({ username });
+  }
+
+  async update({ id, ...param }: UpdateUserDto) {
+    const u = await this.findOne(id);
+    if (!u) throw new HttpException('User not found.', HttpStatus.NOT_FOUND);
+    await this.usersRepository.update(id, param);
     return { code: 200, data: id };
+  }
+
+  async query(key: string, limit: number, offset: number) {
+    return {
+      code: 200,
+      data: (
+        await this.usersRepository
+          .createQueryBuilder('u')
+          .where('u.status = :status', { status: 0 })
+          .andWhere(
+            new Brackets((_) => {
+              _.where('u.username like :username', {
+                username: `%${key}%`,
+              }).orWhere('u.email like :email', { email: `%${key}%` });
+            }),
+          )
+          .skip(offset * limit)
+          .take(limit)
+          .getMany()
+      ).map(delAnyUserInfo),
+    };
   }
 }

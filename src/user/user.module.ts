@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule } from 'src/auth/auth.module';
-import User from 'src/entity/User';
-import Post from 'src/entity/Post';
+import { AuthModule } from '../auth/auth.module';
+import User from '../entity/User';
+import Post from '../entity/Post';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
-import Video from 'src/entity/Video';
-import Appraisal from 'src/entity/Appraisal';
-import Category from 'src/entity/Category';
-import Tag from 'src/entity/Tag';
+import Video from '../entity/Video';
+import Appraisal from '../entity/Appraisal';
+import Category from '../entity/Category';
+import Tag from '../entity/Tag';
 
 @Module({
   imports: [

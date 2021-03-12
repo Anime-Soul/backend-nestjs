@@ -10,6 +10,9 @@ export default class Tag extends _BaseEntity {
   @Column({ nullable: true })
   description?: string;
 
+  @Column()
+  creatorId: string;
+
   @ManyToMany(() => Post, (p) => p.tags, { nullable: true })
   posts?: Post[];
 }

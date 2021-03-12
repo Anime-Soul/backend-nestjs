@@ -20,5 +20,5 @@ export default class Video extends _BaseEntity {
   cover?: string;
 
   @ManyToOne(() => Post, (post) => post.videos)
-  bindPost: Post;
+  bindPost?: Post;
 }

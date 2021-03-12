@@ -1,5 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { isNumber } from 'class-validator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -7,14 +8,14 @@ export class RolesGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const roles = this.reflector.get<string[]>('roles', context.getHandler());
-    if (!roles) {
-      return true;
-    }
+    if (!roles) return true;
+
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-    const hasRole = () =>
-      !!user.roles.find((role) => !!roles.find((item) => item === role));
+    const hasRole = () => !!roles.includes(user.role);
 
-    return user && user.roles && hasRole();
+    console.log('RolesGuard', roles, user.role);
+
+    return user && isNumber(user.role) && hasRole();
   }
 }

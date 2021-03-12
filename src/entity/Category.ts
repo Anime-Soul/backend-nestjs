@@ -1,5 +1,6 @@
-import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
 import Post from './Post';
+import User from './User';
 import _BaseEntity from './_BaseEntity';
 
 @Entity()
@@ -9,6 +10,9 @@ export default class Category extends _BaseEntity {
 
   @Column({ nullable: true })
   description?: string;
+
+  @Column()
+  creatorId: string;
 
   @ManyToMany(() => Post, (p) => p.categories, { nullable: true })
   posts?: Post[];

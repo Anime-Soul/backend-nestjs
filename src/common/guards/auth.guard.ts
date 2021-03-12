@@ -13,7 +13,7 @@ export class IAuthGuard extends AuthGuard('jwt') {
       'isPublic',
       context.getHandler(),
     );
-    console.log(context);
+    // console.log(context);
 
     //TODO
 

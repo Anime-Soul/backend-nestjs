@@ -5,9 +5,14 @@ export type IResponse<T> = Promise<{
 }>;
 
 export const ROLESMAP = {
-  SUPER_ADMIN: 0,
+  ROOT: 0,
   ADMIN: 1,
   WRITER: 2,
   HUMAN: 3,
   READER: 4,
+};
+
+export type ListDto = {
+  limit: number;
+  offset: number;
 };

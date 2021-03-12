@@ -13,7 +13,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload) {
-    if (!payload) throw new UnauthorizedException('');
+    if (!payload) throw new UnauthorizedException();
 
     return {
       userId: payload.userId,

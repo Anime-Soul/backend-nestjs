@@ -6,6 +6,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { isProd } from './common/env';
 import { Connection } from 'typeorm';
 import { PostModule } from './post/post.module';
+import { VideoModule } from './video/video.module';
+import { TagModule } from './tag/tag.module';
+import { CategoryModule } from './category/category.module';
 
 @Module({
   imports: [
@@ -21,10 +24,14 @@ import { PostModule } from './post/post.module';
       autoLoadEntities: true,
       synchronize: !isProd,
       keepConnectionAlive: true,
+      // debug: !isProd,
     }),
     UserModule,
     AuthModule,
     PostModule,
+    VideoModule,
+    TagModule,
+    CategoryModule,
   ],
   providers: [],
 })
