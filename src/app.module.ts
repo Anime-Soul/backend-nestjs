@@ -19,7 +19,7 @@ import { CategoryModule } from './category/category.module';
       port: 3306,
       username: 'su',
       password: 'Passw0rd.',
-      database: 'nest-dm',
+      database: 'nest_dm',
       entities: ['./entity/*{.ts,.js}'],
       autoLoadEntities: true,
       synchronize: !isProd,
