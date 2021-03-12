@@ -22,7 +22,7 @@ async function bootstrap() {
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new IAuthGuard(reflector));
 
-  await app.listen(3000, '0.0.0.0');
+  await app.listen(3000, isProd ? '10.170.0.2' : '0.0.0.0');
   console.log(
     `[ ${
       isProd ? 'prod' : 'dev'

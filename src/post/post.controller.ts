@@ -19,6 +19,7 @@ import Post from '../entity/Post';
 import { ListDto, ROLESMAP } from 'src/type';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
+import { Public } from 'src/common/decorators/auth.decorator';
 
 @Controller('post')
 @UseGuards(RolesGuard)
@@ -35,6 +36,7 @@ export class PostController {
     return this.postService.create({ creatorId: user.userId, ...params });
   }
 
+  @Public()
   @Get('list')
   async list(@Query() { offset = 0, limit = 15 }: ListDto) {
     return {
