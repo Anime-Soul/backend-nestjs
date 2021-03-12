@@ -1,13 +1,13 @@
 import * as mysql from 'mysql2';
 
-const cliConn = mysql.createConnection({
+const cliConn = mysql.createPool({
   host: 'localhost',
   user: 'root',
   password: 'root',
   database: 'clicli',
 });
 
-const DMConn = mysql.createConnection({
+const DMConn = mysql.createPool({
   host: 'localhost',
   user: 'root',
   password: 'root',
