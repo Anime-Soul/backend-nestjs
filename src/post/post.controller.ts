@@ -36,7 +36,7 @@ export class PostController {
   }
 
   @Get('list')
-  async list(@Query() { offset, limit }: ListDto) {
+  async list(@Query() { offset = 0, limit = 15 }: ListDto) {
     return {
       code: 200,
       data: await this.PostRepository.find({
