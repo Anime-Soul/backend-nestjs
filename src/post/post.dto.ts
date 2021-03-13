@@ -38,18 +38,13 @@ export class UpdatePostArgs {
   id: string;
 }
 
-export class QueryPostsArgs {
-  id?: string;
-
+class QueryPostWhere {
   title?: string;
 
   type?: number;
-
-  creatorId?: string;
-
-  categoriesId?: string[];
-
-  tagsId?: string[];
+}
+export class QueryPostsArgs {
+  where?: QueryPostWhere;
 
   offset?: number;
 

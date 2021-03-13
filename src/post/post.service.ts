@@ -4,7 +4,6 @@ import Post from '../entity/Post';
 import User from '../entity/User';
 import { Repository } from 'typeorm';
 import { CreatePostArgs } from './post.dto';
-import { delAnyUserInfo } from 'src/user/user.dto';
 
 @Injectable()
 export class PostService {
@@ -20,7 +19,7 @@ export class PostService {
         ...options,
       })
       .save();
-    delAnyUserInfo(post.creator);
+    delete post.creator;
     return post;
   }
 }

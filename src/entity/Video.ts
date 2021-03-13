@@ -21,4 +21,7 @@ export default class Video extends _BaseEntity {
 
   @ManyToOne(() => Post, (post) => post.videos)
   bindPost?: Post;
+
+  @Column({ nullable: true })
+  creatorId?: string;
 }

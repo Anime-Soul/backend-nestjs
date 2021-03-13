@@ -3,22 +3,18 @@ import {
   Controller,
   Get,
   Post as P,
-  Query,
   Delete,
   Param,
   UseGuards,
   Patch,
+  Req,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import Post from '../entity/Post';
 import Video from '../entity/Video';
 import { ListDto, ROLESMAP } from '../type';
 import { Repository } from 'typeorm';
-import {
-  CreateVideoArgs,
-  EditVideoArgs,
-  OptionalVideoField,
-} from './video.dto';
+import { CreateVideoArgs, OptionalVideoField } from './video.dto';
 import { VideoService } from './video.service';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -35,7 +31,7 @@ export class VideoController {
   ) {}
 
   @Get('list')
-  async list(@Query() { offset = 0, limit = 15 }: ListDto) {
+  async list(@Body() { offset = 0, limit = 15 }: ListDto) {
     return {
       code: 200,
       data: await this.videoRepository.find({
@@ -48,7 +44,10 @@ export class VideoController {
 
   @P()
   @Roles(ROLESMAP.WRITER, ROLESMAP.ADMIN, ROLESMAP.ROOT)
-  async create(@Body() { bindPostId, ...params }: CreateVideoArgs) {
+  async create(
+    @Body() { bindPostId, ...params }: CreateVideoArgs,
+    @Req() { user },
+  ) {
     const post = await this.PostRepository.findOne(bindPostId);
     let v: Video;
     if (post) {
@@ -56,6 +55,7 @@ export class VideoController {
         .create({
           bindPost: post,
           ...params,
+          creatorId: user.userId,
         })
         .save();
     } else {

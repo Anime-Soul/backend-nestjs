@@ -9,6 +9,7 @@ import { PostModule } from './post/post.module';
 import { VideoModule } from './video/video.module';
 import { TagModule } from './tag/tag.module';
 import { CategoryModule } from './category/category.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { CategoryModule } from './category/category.module';
       port: 3306,
       username: isProd ? 'su' : 'root',
       password: isProd ? 'Passw0rd.' : 'root',
-      database: 'nest_dm',
+      database: isProd ? 'nest_dm' : 'nest-dm',
       entities: ['./entity/*{.ts,.js}'],
       autoLoadEntities: true,
       synchronize: !isProd,
@@ -34,6 +35,7 @@ import { CategoryModule } from './category/category.module';
     CategoryModule,
   ],
   providers: [],
+  controllers: [AppController],
 })
 export class AppModule /* implements NestModule */ {
   constructor(private connection: Connection) {}

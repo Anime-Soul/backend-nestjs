@@ -12,7 +12,7 @@ export const ROLESMAP = {
   READER: 4,
 };
 
-export type ListDto = {
-  limit: number;
-  offset: number;
-};
+export class ListDto {
+  limit?: number;
+  offset?: number;
+}

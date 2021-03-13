@@ -5,8 +5,6 @@ import { Brackets, Repository } from 'typeorm';
 import { IResponse } from 'src/type';
 import { delAnyUserInfo, SignUpDto, UpdateUserDto } from './user.dto';
 import { AuthService } from 'src/auth/auth.service';
-import fetch from 'node-fetch';
-import * as FormData from 'form-data';
 
 @Injectable()
 export class UserService {
