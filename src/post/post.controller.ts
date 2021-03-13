@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post as P,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -38,9 +39,11 @@ export class PostController {
 
   @Public()
   @Get('list')
-  async list(@Body() { offset = 0, limit = 15, where }: QueryPostsArgs) {
+  async list(@Query() body: QueryPostsArgs) {
     const rep = this.PostRepository.createQueryBuilder('p');
+    const { offset = 0, limit = 15, where = {} } = body;
     const { type, title } = where;
+    console.log({ ...body });
 
     if (title)
       rep.where('p.title like :title', {
@@ -49,14 +52,14 @@ export class PostController {
 
     if (type) rep.where('p.type=:type', { type });
 
-    rep;
-
     return {
       code: 200,
       data: await rep
+        .leftJoinAndSelect('p.creator', 'c') //todo限制字段
         .skip(offset * limit)
         .take(limit)
-        .orderBy('createdAt', 'DESC')
+        // sort 不能daxie
+        // .orderBy('createdAt', 'DESC')
         .getMany(),
     };
   }

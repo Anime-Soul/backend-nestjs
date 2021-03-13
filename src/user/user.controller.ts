@@ -35,7 +35,7 @@ export class UserController {
 
   @Public()
   @Get('query')
-  query(@Body() { key, offset = 0, limit = 15 }: any) {
+  query(@Query() { key, offset = 0, limit = 15 }: any) {
     return this.userService.query(key, offset, limit);
   }
 

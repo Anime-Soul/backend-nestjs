@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post as P,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -32,7 +33,7 @@ export class TagController {
 
   //todo key search
   @Get('list')
-  list(@Body() { offset, limit }: ListDto) {
+  list(@Query() { offset, limit }: ListDto) {
     return this.TagRepository.find({
       skip: offset * limit,
       take: limit,

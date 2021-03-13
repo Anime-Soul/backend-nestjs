@@ -8,6 +8,7 @@ import {
   Patch,
   UseGuards,
   Req,
+  Query,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -44,7 +45,7 @@ export class CategoryController {
   }
 
   @Get('list')
-  list(@Body() { offset = 0, limit = 15 }: ListDto) {
+  list(@Query() { offset = 0, limit = 15 }: ListDto) {
     return this.CategoryRepository.find({
       skip: offset * limit,
       take: limit,

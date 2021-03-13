@@ -8,6 +8,7 @@ import {
   UseGuards,
   Patch,
   Req,
+  Query,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import Post from '../entity/Post';
@@ -31,7 +32,7 @@ export class VideoController {
   ) {}
 
   @Get('list')
-  async list(@Body() { offset = 0, limit = 15 }: ListDto) {
+  async list(@Query() { offset = 0, limit = 15 }: ListDto) {
     return {
       code: 200,
       data: await this.videoRepository.find({
