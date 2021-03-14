@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { ValidationPipe } from '../common/pipes/validation.pipe';
 import { Public } from 'src/common/decorators/auth.decorator';
-import { delAnyUserInfo, SignUpDto, UpdateUserDto } from './user.dto';
+import { SignUpDto, UpdateUserDto } from './user.dto';
 import { UserService } from './user.service';
 import { ROLESMAP } from 'src/type';
 @Controller('user')
@@ -41,14 +41,12 @@ export class UserController {
 
   @Get(':username')
   async queryByEmail(@Param('username') username) {
-    const u = await this.userService
-      .findOneByUsername(username)
-      .then(delAnyUserInfo);
+    const u = await this.userService.findOneByUsername(username);
 
     return { code: u ? 200 : 404, data: u || null };
   }
 
-  @Patch('update')
+  @Patch()
   async update(@Body() { id, ...params }: UpdateUserDto, @Req() { user }) {
     if (id && id !== user.userId && user.role > ROLESMAP.ADMIN)
       throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
@@ -58,6 +56,6 @@ export class UserController {
   @Get('me')
   async me(@Req() { user }) {
     const m = await this.userService.findOne(user.userId);
-    return { code: m ? 200 : 404, data: delAnyUserInfo(m) };
+    return { code: m ? 200 : 404, data: m };
   }
 }

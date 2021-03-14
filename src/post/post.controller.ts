@@ -7,7 +7,6 @@ import {
   Param,
   Patch,
   Post as P,
-  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -20,7 +19,7 @@ import { ROLESMAP } from 'src/type';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Public } from 'src/common/decorators/auth.decorator';
-import { HttpErrorByCode } from '@nestjs/common/utils/http-error-by-code.util';
+import { SqlQueryErrorRes } from 'src/common/util/sql.error.response';
 
 @Controller('post')
 @UseGuards(RolesGuard)
@@ -38,12 +37,11 @@ export class PostController {
   }
 
   @Public()
-  @Get('list')
-  async list(@Query() body: QueryPostsArgs) {
+  @P('list')
+  async list(@Body() body: QueryPostsArgs) {
     const rep = this.PostRepository.createQueryBuilder('p');
     const { offset = 0, limit = 15, where = {} } = body;
     const { type, title } = where;
-    console.log({ ...body });
 
     if (title)
       rep.where('p.title like :title', {
@@ -55,11 +53,12 @@ export class PostController {
     return {
       code: 200,
       data: await rep
-        .leftJoinAndSelect('p.creator', 'c') //todo限制字段
+        .leftJoinAndSelect('p.creator', 'u')
+        .leftJoinAndSelect('p.categories', 'c')
+        .leftJoinAndSelect('p.tags', 't')
         .skip(offset * limit)
         .take(limit)
-        // sort 不能daxie
-        // .orderBy('createdAt', 'DESC')
+        .orderBy('p.createdAt', 'DESC')
         .getMany(),
     };
   }
@@ -84,12 +83,7 @@ export class PostController {
       .relation(Post, 'categories')
       .of(postId)
       .add(categoryId)
-      .catch((_) => {
-        if (_.code === 'ER_DUP_ENTRY' || _.errno === 1062) {
-          throw new HttpException('重复添加', HttpStatus.BAD_REQUEST);
-        }
-        throw new HttpException('', HttpStatus.BAD_REQUEST);
-      });
+      .catch(SqlQueryErrorRes);
     return { code: 200 };
   }
 
@@ -108,12 +102,7 @@ export class PostController {
       .relation('tags')
       .of(postId)
       .add(tagId)
-      .catch((_) => {
-        if (_.code === 'ER_DUP_ENTRY' || _.errno === 1062) {
-          throw new HttpException('重复添加', HttpStatus.BAD_REQUEST);
-        }
-        throw new HttpException('', HttpStatus.BAD_REQUEST);
-      });
+      .catch(SqlQueryErrorRes);
     return { code: 200 };
   }
 }

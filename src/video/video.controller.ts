@@ -60,7 +60,7 @@ export class VideoController {
         })
         .save();
     } else {
-      return { code: 404, msg: 'Post not found' };
+      return { code: 404, message: 'Post not found' };
     }
     return { code: 200, data: v };
   }
@@ -71,7 +71,7 @@ export class VideoController {
   async update(@Param('id') id: number, @Body() params: OptionalVideoField) {
     const res = await this.videoRepository.update(id, params);
     if (res.affected < 1) {
-      return { code: 404, msg: 'Nothing happened' };
+      return { code: 404, message: 'Nothing happened' };
     } else {
       return { code: 201 };
     }
@@ -82,7 +82,7 @@ export class VideoController {
   async delete(@Param('id') id: number) {
     const res = await this.videoRepository.update(id, { status: -1 });
     if (res.affected < 1) {
-      return { code: 404, msg: 'Nothing happened' };
+      return { code: 404, message: 'Nothing happened' };
     } else {
       return { code: 204 };
     }

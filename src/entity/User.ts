@@ -9,7 +9,7 @@ export default class User extends _BaseEntity {
   @Column({ default: ROLESMAP.READER, type: 'tinyint' })
   roleLevel: number;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, select: false })
   resetPWDToken?: string;
 
   @Column({ length: 8, unique: true, nullable: true })
@@ -18,10 +18,10 @@ export default class User extends _BaseEntity {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ select: false })
   password: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, select: false })
   token?: string;
 
   @Column({ nullable: true })

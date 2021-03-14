@@ -1,6 +1,6 @@
 export type IResponse<T> = Promise<{
   code: number;
-  msg?: string;
+  message?: string;
   data?: T;
 }>;
 

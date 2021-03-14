@@ -1,11 +1,10 @@
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
+import { Column, Entity, ManyToMany } from 'typeorm';
 import Post from './Post';
-import User from './User';
 import _BaseEntity from './_BaseEntity';
 
 @Entity()
 export default class Category extends _BaseEntity {
-  @Column()
+  @Column({ unique: true })
   name: string;
 
   @Column({ nullable: true })

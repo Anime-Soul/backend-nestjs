@@ -4,7 +4,7 @@ import _BaseEntity from './_BaseEntity';
 
 @Entity()
 export default class Tag extends _BaseEntity {
-  @Column()
+  @Column({ unique: true })
   name: string;
 
   @Column({ nullable: true })

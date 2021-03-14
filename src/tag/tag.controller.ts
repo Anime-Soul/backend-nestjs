@@ -43,12 +43,14 @@ export class TagController {
 
   @P()
   @Roles(ROLESMAP.WRITER, ROLESMAP.ADMIN, ROLESMAP.ROOT)
-  async add(@Body() params: CreateTagArgs, @Req() { user }) {
-    const tag = await this.TagRepository.create({
+  async create(@Body() params: CreateTagArgs, @Req() { user }) {
+    return this.TagRepository.create({
       creatorId: user.userId,
       ...params,
-    }).save();
-    return { code: 201, data: tag };
+    })
+      .save()
+      .then((_) => ({ code: 201, data: _ }))
+      .catch(() => ({ code: 500 }));
   }
 
   @Delete(':id')
@@ -63,9 +65,11 @@ export class TagController {
   async update(@Body() { id, ...params }: any) {
     return this.TagRepository.update(id, params)
       .then((_) =>
-        _.affected < 1 ? { code: 404, msg: 'Nothing happened' } : { code: 201 },
+        _.affected < 1
+          ? { code: 404, message: 'Nothing happened' }
+          : { code: 201 },
       )
-      .catch((_) => ({ code: 500, msg: _ }));
+      .catch((_) => ({ code: 500, message: _ }));
   }
 
   @Get(':id/posts')
@@ -82,6 +86,8 @@ export class TagController {
         return 'p.id in ' + subQuery;
       })
       .setParameter('tagId', id)
+      .leftJoinAndSelect('p.creator', 'c')
+      .orderBy('p.createdAt', 'DESC')
       .skip(offset * limit)
       .take(limit)
       .getMany();

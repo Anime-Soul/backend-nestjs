@@ -3,8 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import User from 'src/entity/User';
 import { Brackets, Repository } from 'typeorm';
 import { IResponse } from 'src/type';
-import { delAnyUserInfo, SignUpDto, UpdateUserDto } from './user.dto';
+import { SignUpDto, UpdateUserDto } from './user.dto';
 import { AuthService } from 'src/auth/auth.service';
+import { SqlQueryErrorRes } from 'src/common/util/sql.error.response';
 
 @Injectable()
 export class UserService {
@@ -18,12 +19,12 @@ export class UserService {
     const { email, password, repassword } = param;
 
     if (password !== repassword) {
-      return { code: 400, msg: '两次密码输入不一致' };
+      return { code: 400, message: '两次密码输入不一致' };
     }
 
     const user = await this.findOneByEmail(email);
     if (user) {
-      return { code: 400, msg: '用户已存在' };
+      return { code: 400, message: '用户已存在' };
     }
     const hash = this.authService.hashUserPwd(password);
     const u = await this.usersRepository
@@ -33,14 +34,15 @@ export class UserService {
       })
       .save();
 
-    return {
-      data: delAnyUserInfo(u),
-      code: 201,
-    };
+    return { data: u, code: 201 };
   }
 
   async signin({ email, password }) {
-    const user = await this.findOneByEmail(email);
+    const user = await this.usersRepository.findOne({
+      where: { email },
+      select: ['id', 'password', 'username', 'roleLevel', 'email'],
+    });
+
     if (user) {
       const authResult = this.authService.validateUserPwd(
         password,
@@ -49,7 +51,7 @@ export class UserService {
       if (authResult) {
         return this.authService.certificate(user);
       } else {
-        return { code: 403, msg: 'login error' };
+        return { code: 403, message: '账号或密码错误' };
       }
     } else {
       return { code: 404 };
@@ -71,28 +73,28 @@ export class UserService {
   async update({ id, ...param }: UpdateUserDto) {
     const u = await this.findOne(id);
     if (!u) throw new HttpException('User not found.', HttpStatus.NOT_FOUND);
-    await this.usersRepository.update(id, param);
-    return { code: 200, data: id };
+    return this.usersRepository
+      .update(id, param)
+      .then(() => ({ code: 200, data: id }))
+      .catch(SqlQueryErrorRes);
   }
 
   async query(key: string, limit: number, offset: number) {
     return {
       code: 200,
-      data: (
-        await this.usersRepository
-          .createQueryBuilder('u')
-          .where('u.status = :status', { status: 0 })
-          .andWhere(
-            new Brackets((_) => {
-              _.where('u.username like :username', {
-                username: `%${key}%`,
-              }).orWhere('u.email like :email', { email: `%${key}%` });
-            }),
-          )
-          .skip(offset * limit)
-          .take(limit)
-          .getMany()
-      ).map(delAnyUserInfo),
+      data: await this.usersRepository
+        .createQueryBuilder('u')
+        .where('u.status = :status', { status: 0 })
+        .andWhere(
+          new Brackets((_) => {
+            _.where('u.username like :username', {
+              username: `%${key}%`,
+            }).orWhere('u.email like :email', { email: `%${key}%` });
+          }),
+        )
+        .skip(offset * limit)
+        .take(limit)
+        .getMany(),
     };
   }
 }

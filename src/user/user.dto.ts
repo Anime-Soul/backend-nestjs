@@ -24,12 +24,5 @@ export class UpdateUserDto {
   username?: string;
   avatar?: string;
   bio?: string;
-  status?: number;
+  // status?: number;
 }
-
-export const delAnyUserInfo = (u: User) => {
-  delete u?.password;
-  delete u?.token;
-  delete u?.resetPWDToken;
-  return u;
-};

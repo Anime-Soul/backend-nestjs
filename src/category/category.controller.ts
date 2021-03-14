@@ -13,6 +13,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { RolesGuard } from 'src/common/guards/roles.guard';
+import { SqlQueryErrorRes } from 'src/common/util/sql.error.response';
 import Category from 'src/entity/Category';
 import Post from 'src/entity/Post';
 import { PostInCategoryDto } from 'src/tag/tag.dto';
@@ -33,15 +34,15 @@ export class CategoryController {
   ) {}
 
   @P()
-  @Roles(ROLESMAP.WRITER, ROLESMAP.ADMIN, ROLESMAP.ROOT)
-  async add(@Body() params: CategoryDto, @Req() { user }) {
-    return {
-      code: 201,
-      data: await this.CategoryRepository.create({
-        creatorId: user.userId,
-        ...params,
-      }).save(),
-    };
+  @Roles(ROLESMAP.ADMIN, ROLESMAP.ROOT)
+  async create(@Body() params: CategoryDto, @Req() { user }) {
+    return this.CategoryRepository.create({
+      creatorId: user.userId,
+      ...params,
+    })
+      .save()
+      .then((_) => ({ code: 201, data: _ }))
+      .catch(SqlQueryErrorRes);
   }
 
   @Get('list')
@@ -58,9 +59,11 @@ export class CategoryController {
   async delete(@Param('id') id: number) {
     await this.CategoryRepository.update(id, { status: -1 })
       .then((_) =>
-        _.affected < 1 ? { code: 404, msg: 'Nothing happened' } : { code: 201 },
+        _.affected < 1
+          ? { code: 404, message: 'Nothing happened' }
+          : { code: 201 },
       )
-      .catch((_) => ({ code: 500, msg: _ }));
+      .catch((_) => ({ code: 500, message: _ }));
     return { code: 204, data: id };
   }
 
@@ -69,9 +72,11 @@ export class CategoryController {
   async update(@Body() { id, ...params }: CategoryUpdateDto) {
     return this.CategoryRepository.update(id, params)
       .then((_) =>
-        _.affected < 1 ? { code: 404, msg: 'Nothing happened' } : { code: 201 },
+        _.affected < 1
+          ? { code: 404, message: 'Nothing happened' }
+          : { code: 201 },
       )
-      .catch((_) => ({ code: 500, msg: _ }));
+      .catch((_) => ({ code: 500, message: _ }));
   }
 
   @Get(':id/posts')
