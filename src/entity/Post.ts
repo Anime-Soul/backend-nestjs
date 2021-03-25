@@ -12,6 +12,7 @@ import Tag from './Tag';
 import User from './User';
 import Video from './Video';
 import _BaseEntity from './_BaseEntity';
+import Comment from './Comment';
 
 @Entity()
 export default class Post extends _BaseEntity {
@@ -27,8 +28,14 @@ export default class Post extends _BaseEntity {
   @Column({ nullable: true })
   cover?: string;
 
-  @Column({ default: 0 })
+  @Column({ default: 0, type: 'tinyint' })
   type: number; // video 0 or topic 1
+
+  @Column({ type: 'int', default: 0 })
+  up: number;
+
+  @Column({ type: 'int', default: 0 })
+  view: number;
 
   @ManyToOne(() => User, (user) => user.posts, { nullable: false })
   creator: User;
@@ -46,4 +53,7 @@ export default class Post extends _BaseEntity {
   @ManyToMany(() => Tag, (t) => t.posts, { nullable: true })
   @JoinTable()
   tags?: Tag[];
+
+  @OneToMany(() => Comment, (comment) => comment.creator)
+  comments?: Comment[];
 }

@@ -16,3 +16,11 @@ export class ListDto {
   limit?: number;
   offset?: number;
 }
+
+export interface JWT_USER_INFO {
+  userId: string;
+  status: number;
+  email: string;
+  username: string;
+  role: number;
+}

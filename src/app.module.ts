@@ -10,7 +10,14 @@ import { VideoModule } from './video/video.module';
 import { TagModule } from './tag/tag.module';
 import { CategoryModule } from './category/category.module';
 import { AppController } from './app.controller';
-
+import { CommentModule } from './comment/comment.module';
+import Appraisal from './entity/Appraisal';
+import Category from './entity/Category';
+import Tag from './entity/Tag';
+import User from './entity/User';
+import Video from './entity/Video';
+import Post from './entity/Post';
+import Comment from './entity/Comment';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, cache: true }),
@@ -28,12 +35,22 @@ import { AppController } from './app.controller';
       logger: 'advanced-console',
       logging: ['query', 'error', 'warn'],
     }),
+    TypeOrmModule.forFeature([
+      User,
+      Post,
+      Video,
+      Appraisal,
+      Category,
+      Tag,
+      Comment,
+    ]),
     UserModule,
     AuthModule,
     PostModule,
     VideoModule,
     TagModule,
     CategoryModule,
+    CommentModule,
   ],
   providers: [],
   controllers: [AppController],

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import Post from '../entity/Post';
 import User from '../entity/User';
@@ -20,6 +20,6 @@ export class PostService {
       })
       .save();
     delete post.creator;
-    return post;
+    return { code: HttpStatus.CREATED, data: post };
   }
 }

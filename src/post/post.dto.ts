@@ -50,3 +50,10 @@ export class QueryPostsArgs {
 
   limit?: number;
 }
+
+export class CommentDto {
+  @IsNotEmpty()
+  content: string;
+
+  parent?: string;
+}

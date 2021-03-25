@@ -3,6 +3,7 @@ import { Column, Entity, OneToMany } from 'typeorm';
 import Appraisal from './Appraisal';
 import Post from './Post';
 import _BaseEntity from './_BaseEntity';
+import Comment from './Comment';
 
 @Entity()
 export default class User extends _BaseEntity {
@@ -35,4 +36,7 @@ export default class User extends _BaseEntity {
 
   @OneToMany(() => Appraisal, (appraisal) => appraisal.creator)
   appraisals?: Appraisal[];
+
+  @OneToMany(() => Comment, (comment) => comment.creator)
+  comments?: Comment[];
 }

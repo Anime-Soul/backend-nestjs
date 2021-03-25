@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as crypto from 'crypto';
 import User from 'src/entity/User';
+import { JWT_USER_INFO } from '../type';
 
 @Injectable()
 export class AuthService {
@@ -18,11 +19,12 @@ export class AuthService {
   }
 
   async certificate(user: User) {
-    const payload = {
+    const payload: JWT_USER_INFO = {
       email: user.email,
       userId: user.id,
       username: user.username,
       role: user.roleLevel,
+      status: user.status,
     };
 
     const token = this.jwtService.sign(payload, {

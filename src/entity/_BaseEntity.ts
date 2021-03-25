@@ -16,6 +16,6 @@ export default class extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Column({ type: 'tinyint', default: 0 }) // 0 正常
+  @Column({ type: 'tinyint', default: 0 }) // 0 正常 -1 block
   status: number;
 }
