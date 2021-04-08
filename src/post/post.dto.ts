@@ -42,6 +42,8 @@ class QueryPostWhere {
   title?: string;
 
   type?: number;
+
+  sort?: string;
 }
 export class QueryPostsArgs extends QueryPostWhere {
   offset?: number;

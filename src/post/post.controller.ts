@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post as P,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -15,13 +16,14 @@ import { Repository } from 'typeorm';
 import { CreatePostArgs, QueryPostsArgs, CommentDto } from './post.dto';
 import { PostService } from './post.service';
 import Post from '../entity/Post';
-import { ROLESMAP } from 'src/type';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { Public } from 'src/common/decorators/auth.decorator';
-import { SqlQueryErrorRes } from 'src/common/util/sql.error.response';
-import Comment from 'src/entity/Comment';
-import Appraisal from 'src/entity/Appraisal';
+import { ROLESMAP } from '../type';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Public } from '../common/decorators/auth.decorator';
+import { SqlQueryErrorRes } from '../common/util/sql.error.response';
+import Comment from '../entity/Comment';
+import Appraisal from '../entity/Appraisal';
+import Video from '../entity/Video';
 
 @Controller('post')
 @UseGuards(RolesGuard)
@@ -30,6 +32,8 @@ export class PostController {
     private readonly postService: PostService,
     @InjectRepository(Post)
     private readonly PostRepository: Repository<Post>,
+    @InjectRepository(Video)
+    private readonly VideoRepository: Repository<Video>,
     @InjectRepository(Comment)
     private CommentRepository: Repository<Comment>,
     @InjectRepository(Appraisal)
@@ -44,9 +48,19 @@ export class PostController {
 
   @Public()
   @Get('list')
-  async list(@Body() body: QueryPostsArgs) {
+  async list(@Query() body: QueryPostsArgs) {
     const rep = this.PostRepository.createQueryBuilder('p');
-    const { offset = 0, limit = 15, type, title } = body;
+    const { offset = 0, limit = 15, type, title, sort } = body;
+    const _sort: any = { 'p.createdAt': 'DESC' };
+
+    switch (sort) {
+      case 'hot':
+        _sort['p.up'] = 'DESC';
+        _sort['p.views'] = 'DESC';
+      //TODO: comment 多少排序
+      default:
+        break;
+    }
 
     if (title)
       rep.where('p.title like :title', {
@@ -55,32 +69,27 @@ export class PostController {
 
     if (type) rep.andWhere('p.type=:type', { type });
 
+    // https://blog.csdn.net/qq_34637782/article/details/101029487
     const p = await rep
-      .select(['p', 'u.id', 'u.username', 'u.bio', 'u.avatar', 't', 'c', 'a'])
+      .select([
+        'p',
+        'u.id',
+        'u.username',
+        'u.bio',
+        'u.avatar',
+        't',
+        'c',
+        'AVG(a.rate) rate', // 这里拿不到去详情页在请求吧
+      ])
       .leftJoin('p.creator', 'u')
       .leftJoin('p.categories', 'c')
       .leftJoin('p.tags', 't')
-      .leftJoin('p.appraisals', 'a') //TODO: 只查询 rate 字段
+      .leftJoin('p.appraisals', 'a')
       .loadRelationCountAndMap('p.commentCount', 'p.comments', 'cm')
-
-      // .leftJoin((qb: SelectQueryBuilder<Appraisal>) => {
-      //   return qb
-      //     .subQuery()
-      //     .from('appraisal', 'a')
-      //     .where('a.bindPostId = p.id')
-      //     .select('SUM(a.rate)', 'sum')
-      //     .addSelect('COUNT(a.id)', 'count');
-      // }, 'aa')
-      // TODO: appraisal relation COUNT() SUM()
-      // .leftJoin('p.appraisals', 'a')
-      // .addSelect('COUNT(a.id)', 'count')
-      // .addSelect('SUM(a.rate)', 'sum')
-      // .groupBy('p.id')
-      // .addGroupBy('c.id')
-      // .addGroupBy('t.id')
       .skip(offset * limit)
       .take(limit)
-      .orderBy('p.createdAt', 'DESC')
+      .orderBy(_sort)
+      .groupBy('p.id, c.id, t.id')
       .getMany();
 
     return { code: 200, data: p };
@@ -101,11 +110,18 @@ export class PostController {
       .addSelect('COUNT(a.id)', 'count')
       .getRawOne<{ sum: string; count: string }>();
 
-    console.log(sum, count);
-
     post.rate = +sum / +count;
 
     return { code: 200, data: post };
+  }
+
+  @Get(':id/videos')
+  async getVideoByPostId(@Param('id') id: string) {
+    const v = await this.VideoRepository.find({
+      where: { bindPost: id },
+      order: { episode: 1 },
+    });
+    return { code: 200, data: v };
   }
 
   @Patch(':postId/ca/:categoryId')
@@ -167,7 +183,7 @@ export class PostController {
         .of(c.id)
         .set(user.userId);
     } catch (error) {
-      return { code: 500, message: error };
+      return { code: 500, message: error.toString() };
     }
 
     return { code: 200 };
@@ -176,9 +192,9 @@ export class PostController {
   //TODO 分页
   @Get(':postId/comments')
   async getCommentsByPostId(@Param('postId') id: string) {
-    const { comments } = await this.PostRepository.findOne(id, {
-      relations: ['comments'],
-      select: ['id'],
+    const comments = await this.CommentRepository.find({
+      where: { bindPost: id },
+      relations: ['creator'],
     });
     return { code: 200, data: comments };
   }
@@ -200,10 +216,10 @@ export class PostController {
     return { code: 200 };
   }
 
-  @Get(':postId/up')
+  @Get(':postId/up') //TODO: uper
   async up(@Param('postId') id: string) {
     const v = await this.PostRepository.findOne(id, { select: ['up'] });
-    await this.PostRepository.update(id, { view: v.up + 1 });
+    await this.PostRepository.update(id, { up: v.up + 1 });
     return { code: 200 };
   }
 

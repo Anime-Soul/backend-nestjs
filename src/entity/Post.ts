@@ -46,7 +46,6 @@ export default class Post extends _BaseEntity {
 
   rate: number;
 
-  @AfterLoad()
   calcAppr() {
     // post 的 appraisals 走单独接口查询
     if (this.appraisals && this.appraisals.length) {
@@ -70,6 +69,6 @@ export default class Post extends _BaseEntity {
   @JoinTable()
   tags?: Tag[];
 
-  @OneToMany(() => Comment, (comment) => comment.creator)
+  @OneToMany(() => Comment, (comment) => comment.bindPost, { nullable: true })
   comments?: Comment[];
 }
