@@ -43,11 +43,10 @@ export class PostController {
   }
 
   @Public()
-  @P('list')
+  @Get('list')
   async list(@Body() body: QueryPostsArgs) {
     const rep = this.PostRepository.createQueryBuilder('p');
-    const { offset = 0, limit = 15, where = {} } = body;
-    const { type, title } = where;
+    const { offset = 0, limit = 15, type, title } = body;
 
     if (title)
       rep.where('p.title like :title', {

@@ -43,9 +43,7 @@ class QueryPostWhere {
 
   type?: number;
 }
-export class QueryPostsArgs {
-  where?: QueryPostWhere;
-
+export class QueryPostsArgs extends QueryPostWhere {
   offset?: number;
 
   limit?: number;
