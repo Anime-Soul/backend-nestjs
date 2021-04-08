@@ -1,5 +1,4 @@
 import { IsEmail, IsNotEmpty, MaxLength, MinLength } from 'class-validator';
-import User from 'src/entity/User';
 
 export class SignUpDto {
   @IsEmail()

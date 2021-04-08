@@ -34,6 +34,15 @@ export class UserController {
   }
 
   @Public()
+  @Post('siginInOrRegister')
+  async siginInOrRegister(@Body() param: SignUpDto) {
+    if (await this.userService.findOneByEmail(param.email)) {
+      return this.signin({ email: param.email, password: param.password });
+    }
+    return this.userService.signup({ repassword: param.password, ...param });
+  }
+
+  @Public()
   @Get('query')
   query(@Query() { key, offset = 0, limit = 15 }: any) {
     return this.userService.query(key, offset, limit);

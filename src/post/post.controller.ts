@@ -21,6 +21,7 @@ import { Roles } from 'src/common/decorators/roles.decorator';
 import { Public } from 'src/common/decorators/auth.decorator';
 import { SqlQueryErrorRes } from 'src/common/util/sql.error.response';
 import Comment from 'src/entity/Comment';
+import Appraisal from 'src/entity/Appraisal';
 
 @Controller('post')
 @UseGuards(RolesGuard)
@@ -31,6 +32,8 @@ export class PostController {
     private readonly PostRepository: Repository<Post>,
     @InjectRepository(Comment)
     private CommentRepository: Repository<Comment>,
+    @InjectRepository(Appraisal)
+    private AppraisalRepository: Repository<Appraisal>,
   ) {}
 
   @P()
@@ -51,25 +54,58 @@ export class PostController {
         title: `%${title}%`,
       });
 
-    if (type) rep.where('p.type=:type', { type });
+    if (type) rep.andWhere('p.type=:type', { type });
 
-    return {
-      code: 200,
-      data: await rep
-        .leftJoinAndSelect('p.creator', 'u')
-        .leftJoinAndSelect('p.categories', 'c')
-        .leftJoinAndSelect('p.tags', 't')
-        .loadRelationIdAndMap('p.comments', 'comments')
-        .skip(offset * limit)
-        .take(limit)
-        .orderBy('p.createdAt', 'DESC')
-        .getMany(),
-    };
+    const p = await rep
+      .select(['p', 'u.id', 'u.username', 'u.bio', 'u.avatar', 't', 'c', 'a'])
+      .leftJoin('p.creator', 'u')
+      .leftJoin('p.categories', 'c')
+      .leftJoin('p.tags', 't')
+      .leftJoin('p.appraisals', 'a') //TODO: 只查询 rate 字段
+      .loadRelationCountAndMap('p.commentCount', 'p.comments', 'cm')
+
+      // .leftJoin((qb: SelectQueryBuilder<Appraisal>) => {
+      //   return qb
+      //     .subQuery()
+      //     .from('appraisal', 'a')
+      //     .where('a.bindPostId = p.id')
+      //     .select('SUM(a.rate)', 'sum')
+      //     .addSelect('COUNT(a.id)', 'count');
+      // }, 'aa')
+      // TODO: appraisal relation COUNT() SUM()
+      // .leftJoin('p.appraisals', 'a')
+      // .addSelect('COUNT(a.id)', 'count')
+      // .addSelect('SUM(a.rate)', 'sum')
+      // .groupBy('p.id')
+      // .addGroupBy('c.id')
+      // .addGroupBy('t.id')
+      .skip(offset * limit)
+      .take(limit)
+      .orderBy('p.createdAt', 'DESC')
+      .getMany();
+
+    return { code: 200, data: p };
   }
 
   @Get(':id')
   async getPostById(@Param('id') id: string) {
-    const post = await this.PostRepository.findOne(id);
+    const post = await this.PostRepository.createQueryBuilder('p')
+      .where('id = :pid', { pid: id })
+      .loadRelationCountAndMap('p.commentCount', 'p.comments', 'cm')
+      .getOne();
+
+    const { sum, count } = await this.AppraisalRepository.createQueryBuilder(
+      'a',
+    )
+      .where('bindPostId = :id', { id })
+      .select('SUM(a.rate)', 'sum')
+      .addSelect('COUNT(a.id)', 'count')
+      .getRawOne<{ sum: string; count: string }>();
+
+    console.log(sum, count);
+
+    post.rate = +sum / +count;
+
     return { code: 200, data: post };
   }
 
