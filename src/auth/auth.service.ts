@@ -18,7 +18,7 @@ export class AuthService {
     return hashPassword === this.hashUserPwd(password).digest('hex');
   }
 
-  async certificate(user: User) {
+  certificate(user: User) {
     const payload: JWT_USER_INFO = {
       email: user.email,
       userId: user.id,
@@ -30,6 +30,6 @@ export class AuthService {
     const token = this.jwtService.sign(payload, {
       secret: process.env.JWT_SECRET,
     });
-    return { code: 200, data: { token } };
+    return token;
   }
 }

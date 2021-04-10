@@ -33,6 +33,7 @@ export class UserService {
         password: hash.digest('hex'),
       })
       .save();
+    u.token = this.authService.certificate(u);
 
     return { data: u, code: 201 };
   }
@@ -49,7 +50,10 @@ export class UserService {
         user.password,
       );
       if (authResult) {
-        return this.authService.certificate(user);
+        return {
+          code: 200,
+          data: { token: this.authService.certificate(user) },
+        };
       } else {
         return { code: 403, message: '账号或密码错误' };
       }
