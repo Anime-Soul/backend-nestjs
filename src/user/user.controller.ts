@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { ValidationPipe } from '../common/pipes/validation.pipe';
 import { Public } from 'src/common/decorators/auth.decorator';
-import { SignUpDto, UpdateUserDto } from './user.dto';
+import { SignInDto, SignUpDto, UpdateUserDto } from './user.dto';
 import { UserService } from './user.service';
 import { ROLESMAP } from 'src/type';
 @Controller('user')
@@ -34,8 +34,8 @@ export class UserController {
   }
 
   @Public()
-  @Post('siginInOrRegister')
-  async siginInOrRegister(@Body() param: SignUpDto) {
+  @Post('app')
+  async siginInOrRegister(@Body() param: SignInDto) {
     if (await this.userService.findOneByEmail(param.email)) {
       return this.signin({ email: param.email, password: param.password });
     }

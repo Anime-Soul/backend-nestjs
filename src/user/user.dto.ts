@@ -16,6 +16,17 @@ export class SignUpDto {
   repassword: string;
 }
 
+export class SignInDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @MaxLength(16)
+  @MinLength(7)
+  @IsNotEmpty()
+  password: string;
+}
+
 // @Transform(value => Number.isNan(+value) ? 0 : +value)
 export class UpdateUserDto {
   id?: string;

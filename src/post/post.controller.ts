@@ -12,7 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { OrderByCondition, Repository } from 'typeorm';
 import { CreatePostArgs, QueryPostsArgs, CommentDto } from './post.dto';
 import { PostService } from './post.service';
 import Post from '../entity/Post';
@@ -51,12 +51,12 @@ export class PostController {
   async list(@Query() body: QueryPostsArgs) {
     const rep = this.PostRepository.createQueryBuilder('p');
     const { offset = 0, limit = 15, type, title, sort } = body;
-    const _sort: any = { 'p.createdAt': 'DESC' };
+    const _sort: OrderByCondition = { 'p.createdAt': 'DESC' };
 
     switch (sort) {
       case 'hot':
         _sort['p.up'] = 'DESC';
-        _sort['p.views'] = 'DESC';
+        _sort['p.view'] = 'DESC';
       //TODO: comment 多少排序
       default:
         break;

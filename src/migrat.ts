@@ -35,7 +35,7 @@ const migratPost = () =>
     DMConn.query('DELETE  FROM post', () => {
       DMConn.query(
         'insert into user set id=?, username=?, email=?, roleLevel=?, avatar=?, password=?;',
-        [1, 'No.1', 'email', 0, defaultCover, 'password'],
+        [1, 'No.1', 'email', 0, defaultCover, '1'],
         () => {
           cliConn.query<any[]>(
             'SELECT * FROM `posts` ORDER BY id',
