@@ -1,3 +1,5 @@
+import { Request } from 'express';
+
 export type IResponse<T> = Promise<{
   code: number;
   message?: string;
@@ -23,4 +25,8 @@ export interface JWT_USER_INFO {
   email: string;
   username: string;
   role: number;
+}
+
+export interface IReq extends Request {
+  user: JWT_USER_INFO;
 }

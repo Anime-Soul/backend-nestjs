@@ -9,13 +9,16 @@ import {
   Post,
   Query,
   Req,
+  UnauthorizedException,
   UsePipes,
 } from '@nestjs/common';
 import { ValidationPipe } from '../common/pipes/validation.pipe';
 import { Public } from 'src/common/decorators/auth.decorator';
 import { SignInDto, SignUpDto, UpdateUserDto } from './user.dto';
 import { UserService } from './user.service';
-import { ROLESMAP } from 'src/type';
+import { IReq, ROLESMAP } from 'src/type';
+import RegCode from 'src/entity/RegCode';
+
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -66,5 +69,18 @@ export class UserController {
   async me(@Req() { user }) {
     const m = await this.userService.findOne(user.userId);
     return { code: m ? 200 : 404, data: m };
+  }
+
+  @Get('gen-code')
+  async genCode(@Req() { user }: IReq, @Query('num') num: number) {
+    if (user.role != ROLESMAP.ROOT) {
+      return new UnauthorizedException();
+    }
+    const list = [];
+    for (let index = 0; index < num; index++) {
+      list.push((await RegCode.create({ status: 0 }).save()).id);
+    }
+
+    return list;
   }
 }
