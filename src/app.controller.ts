@@ -5,7 +5,7 @@ import wasm from './wasm';
 @Controller('/')
 export class AppController {
   @Public()
-  @Post()
+  @Post('wasm')
   wasm(@Req() req, @Res() res) {
     return wasm(req, res);
   }

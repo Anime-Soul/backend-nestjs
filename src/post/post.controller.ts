@@ -51,7 +51,7 @@ export class PostController {
   async list(@Query() body: QueryPostsArgs) {
     const rep = this.PostRepository.createQueryBuilder('p');
     const { offset = 0, limit = 15, type, title, sort } = body;
-    const _sort: OrderByCondition = { 'p.createdAt': 'DESC' };
+    const _sort: OrderByCondition = {};
 
     switch (sort) {
       case 'hot':
@@ -61,6 +61,8 @@ export class PostController {
       default:
         break;
     }
+
+    _sort['p.createdAt'] = 'DESC';
 
     if (title)
       rep.where('p.title like :title', {
@@ -79,17 +81,18 @@ export class PostController {
         'u.avatar',
         't',
         'c',
-        'AVG(a.rate) rate', // 这里拿不到去详情页在请求吧
+        // 'AVG(a.rate) rate', // 这里拿不到去详情页在请求吧
       ])
       .leftJoin('p.creator', 'u')
       .leftJoin('p.categories', 'c')
       .leftJoin('p.tags', 't')
       .leftJoin('p.appraisals', 'a')
       .loadRelationCountAndMap('p.commentCount', 'p.comments', 'cm')
+      .loadRelationCountAndMap('p.videoCount', 'p.videos', 'v')
       .skip(offset * limit)
       .take(limit)
       .orderBy(_sort)
-      .groupBy('p.id, c.id, t.id')
+      // .groupBy('p.id, c.id, t.id') //avg 需要这个
       .getMany();
 
     return { code: 200, data: p };

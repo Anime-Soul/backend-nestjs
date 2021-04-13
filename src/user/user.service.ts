@@ -34,6 +34,7 @@ export class UserService {
       })
       .save();
     u.token = this.authService.certificate(u);
+    delete u.password;
 
     return { data: u, code: 201 };
   }

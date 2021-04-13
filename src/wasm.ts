@@ -1,10 +1,10 @@
-const wasm = async (req, res) => {
-  const u = req.body.url as string;
+import { Request, Response } from 'express';
+import { fail } from './common/util/res.wrap';
 
-  if (!u)
-    return res.send({
-      ERROR: 'ERROR 404',
-    });
+const wasm = async (req: Request, res: Response) => {
+  const u = req.body?.url as string;
+
+  if (!u) return res.send(fail(404, 'url  should not be empty'));
 
   const [content, tag] = u.split('@');
   let url = content;
@@ -72,7 +72,7 @@ const wasm = async (req, res) => {
           `https://apd-vliveachy.apdcdn.tc.qq.com/vmtt.tc.qq.com/1098` + sha;
         return { code, url, type: 'mp4' };
       }
-      return res.send({ code, url, type });
+      return res.send({ code, data: { url, type } });
   }
 };
 

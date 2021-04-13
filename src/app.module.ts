@@ -18,6 +18,7 @@ import User from './entity/User';
 import Video from './entity/Video';
 import Post from './entity/Post';
 import Comment from './entity/Comment';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, cache: true }),
