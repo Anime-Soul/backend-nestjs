@@ -20,7 +20,7 @@ export const done = (
   return { code, data, message: msg };
 };
 
-export const fail = (message = '', error = 'Bad Request', code = 400) => ({
+export const fail = (message = '', code = 400, error = 'Bad Request') => ({
   statusCode: code,
   message: [message],
   error: error,

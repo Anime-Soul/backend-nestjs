@@ -1,11 +1,13 @@
 import { Request, Response } from 'express';
 import { fail } from './common/util/res.wrap';
+import * as fetch from 'node-fetch';
 
 const wasm = async (req: Request, res: Response) => {
   const u = req.body?.url as string;
 
-  if (!u) return res.send(fail(404, 'url  should not be empty'));
+  if (!u) return res.send(fail('url  should not be empty'));
 
+  // https://quan.qq.com/video/1098_ec1274dbc22bb62acece60ac54257a5d
   const [content, tag] = u.split('@');
   let url = content;
   const type = content.includes('m3u8') ? 'hls' : 'mp4';
@@ -64,13 +66,13 @@ const wasm = async (req: Request, res: Response) => {
     default:
       // 时光的处理
       if (content.includes('1098')) {
-        const res: string = await fetch(content)
+        const _res: string = await fetch(content)
           .then((resp) => resp.url)
           .then((data) => data);
-        const sha = res.replace(/(\S*)1098/, '');
+        const sha = _res.replace(/(\S*)1098/, '');
         url =
           `https://apd-vliveachy.apdcdn.tc.qq.com/vmtt.tc.qq.com/1098` + sha;
-        return { code, url, type: 'mp4' };
+        return res.send({ code, url, type: 'mp4' });
       }
       return res.send({ code, data: { url, type } });
   }
