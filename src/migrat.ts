@@ -40,12 +40,13 @@ const migratPost = () =>
           cliConn.query<any[]>(
             'SELECT * FROM `posts` ORDER BY id',
             function (_err, results) {
-              console.log(results.length);
-
               mresult.post.count = results.length;
               results.map((post, i) => {
                 const { title, content, id } = post;
-
+                const pos = content.indexOf('# 播放出错');
+                const _content: string = content
+                  .substring(0, pos)
+                  .replace(/\!\[suo\]\((.*?)\)/, '');
                 const _cover = /\[suo\]\((.*?)\)/.exec(content);
                 let cover: string;
                 if (_cover) cover = _cover[1];
@@ -53,7 +54,7 @@ const migratPost = () =>
 
                 DMConn.query(
                   'insert into post set title=?, content=?, cover=?, id=?, creatorId=?;',
-                  [title, content, cover, id, '1'],
+                  [title, _content, cover, id, '1'],
                   (e: any) => {
                     if (e) {
                       if (mresult.error.errorPost[e.errno])
