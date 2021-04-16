@@ -58,11 +58,21 @@ export class UserController {
     return { code: u ? 200 : 404, data: u || null };
   }
 
+  // @Patch()
+  // async update(@Body() { id, ...params }: UpdateUserDto, @Req() { user }) {
+  //   if (id && id !== user.userId && user.role > ROLESMAP.ADMIN)
+  //     throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+  //   return this.userService.update({ id: id || user.userId, ...params });
+  // }
+
   @Patch()
   async update(@Body() { id, ...params }: UpdateUserDto, @Req() { user }) {
     if (id && id !== user.userId && user.role > ROLESMAP.ADMIN)
       throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
-    return this.userService.update({ id: id || user.userId, ...params });
+    const _id = id || user.userId;
+    const u = await this.userService.findOne(_id);
+
+    return this.userService.update({ id: _id || user.userId, ...u, ...params });
   }
 
   @Get('me')

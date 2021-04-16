@@ -51,10 +51,8 @@ export class UserService {
         user.password,
       );
       if (authResult) {
-        return {
-          code: 200,
-          data: { token: this.authService.certificate(user) },
-        };
+        user.token = this.authService.certificate(user);
+        return { code: 200, data: { user } };
       } else {
         return { code: 403, message: '账号或密码错误' };
       }

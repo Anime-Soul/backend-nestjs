@@ -46,7 +46,8 @@ const migratPost = () =>
                 const pos = content.indexOf('# 播放出错');
                 const _content: string = content
                   .substring(0, pos)
-                  .replace(/\!\[suo\]\((.*?)\)/, '');
+                  .replace(/\!\[suo\]\((.*?)\)/, '')
+                  .replace('# 简介\n', '');
                 const _cover = /\[suo\]\((.*?)\)/.exec(content);
                 let cover: string;
                 if (_cover) cover = _cover[1];

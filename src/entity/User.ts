@@ -13,7 +13,7 @@ export default class User extends _BaseEntity {
   @Column({ nullable: true, select: false })
   resetPWDToken?: string;
 
-  @Column({ length: 8, unique: true, nullable: true })
+  @Column({ length: 12, unique: true, nullable: true })
   username?: string;
 
   @Column({ unique: true })
@@ -25,10 +25,14 @@ export default class User extends _BaseEntity {
   @Column({ nullable: true, select: false })
   token?: string;
 
-  @Column({ nullable: true })
+  @Column({
+    nullable: true,
+    default:
+      'https://ae01.alicdn.com/kf/Hfa4561650386480f884450d0eb82a3eaZ.png',
+  })
   avatar?: string;
 
-  @Column({ nullable: true, length: 15 })
+  @Column({ nullable: true, type: 'varchar', default: 'WHAT"S ANIMESOUL ?' })
   bio?: string;
 
   @OneToMany(() => Post, (post) => post.creator)

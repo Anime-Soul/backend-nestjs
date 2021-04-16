@@ -50,7 +50,7 @@ export class PostController {
   @Get('list')
   async list(@Query() body: QueryPostsArgs) {
     const rep = this.PostRepository.createQueryBuilder('p');
-    const { offset = 0, limit = 15, type, title, sort } = body;
+    const { offset = 0, limit = 15, type = 0, title, sort, creatorId } = body;
     const _sort: OrderByCondition = {};
 
     switch (sort) {
@@ -70,6 +70,8 @@ export class PostController {
       });
 
     if (type) rep.andWhere('p.type=:type', { type });
+
+    if (creatorId) rep.andWhere('p.creatorId=:creatorId', { creatorId });
 
     // https://blog.csdn.net/qq_34637782/article/details/101029487
     const p = await rep
@@ -101,19 +103,23 @@ export class PostController {
   @Get(':id')
   async getPostById(@Param('id') id: string) {
     const post = await this.PostRepository.createQueryBuilder('p')
-      .where('id = :pid', { pid: id })
+      .where('p.id = :pid', { pid: id })
+      .leftJoinAndSelect('p.creator', 'u')
       .loadRelationCountAndMap('p.commentCount', 'p.comments', 'cm')
+      .loadRelationCountAndMap('p.videoCount', 'p.videos', 'v')
       .getOne();
 
-    const { sum, count } = await this.AppraisalRepository.createQueryBuilder(
-      'a',
-    )
-      .where('bindPostId = :id', { id })
-      .select('SUM(a.rate)', 'sum')
-      .addSelect('COUNT(a.id)', 'count')
-      .getRawOne<{ sum: string; count: string }>();
+    post.rate = 0;
 
-    post.rate = +sum / +count;
+    const { rate } = await this.AppraisalRepository.createQueryBuilder('a')
+      .select(['a.rate'])
+      .where('bindPostId = :id', { id })
+      .select('AVG(a.rate)', 'rate')
+      .getRawOne<{ rate: string }>();
+
+    if (rate !== null) {
+      post.rate = parseInt(rate);
+    }
 
     return { code: 200, data: post };
   }
