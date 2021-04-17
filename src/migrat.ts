@@ -11,7 +11,7 @@ const DMConn = mysql.createPool({
   host: 'localhost',
   user: 'root',
   password: 'root',
-  database: 'nest-dm',
+  database: 'animesoul',
 });
 
 const defaultCover =

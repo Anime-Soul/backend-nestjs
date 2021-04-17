@@ -33,8 +33,8 @@ import Comment from './entity/Comment';
       autoLoadEntities: true,
       synchronize: !isProd,
       keepConnectionAlive: true,
-      logger: 'advanced-console',
-      logging: ['query', 'error', 'warn'],
+      logger: isProd ? 'file' : 'advanced-console',
+      logging: isProd ? ['warn', 'error'] : ['query', 'error', 'warn'],
     }),
     TypeOrmModule.forFeature([
       User,

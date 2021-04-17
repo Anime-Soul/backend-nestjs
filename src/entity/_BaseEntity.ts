@@ -10,12 +10,12 @@ export default class extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  @Column({ type: 'tinyint', default: 0 }) // 0 正常 -1 block
+  @Column({ type: 'tinyint', default: 0 })
   status: number;
 }

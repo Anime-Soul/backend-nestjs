@@ -7,10 +7,10 @@ export default class Video extends _BaseEntity {
   @Column()
   title: string;
 
-  @Column()
+  @Column({ type: 'text' })
   playUrl: string;
 
-  @Column()
+  @Column({ type: 'tinyint' })
   episode: number;
 
   @Column({ nullable: true })

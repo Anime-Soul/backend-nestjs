@@ -5,17 +5,19 @@ import _BaseEntity from './_BaseEntity';
 
 @Entity()
 export default class Appraisal extends _BaseEntity {
-  @Column()
+  @Column({ type: 'text' })
   content: string;
 
   @Column({ type: 'tinyint' })
   rate: number;
 
   @ManyToOne(() => Post, (post) => post.appraisals, {
-    // onDelete: 'CASCADE',
+    onDelete: 'SET NULL',
   })
   bindPost: Post;
 
-  @ManyToOne(() => User, (user) => user.appraisals)
+  @ManyToOne(() => User, (user) => user.appraisals, {
+    onDelete: 'SET NULL',
+  })
   creator: User;
 }

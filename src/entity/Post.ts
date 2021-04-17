@@ -1,5 +1,4 @@
 import {
-  AfterLoad,
   Column,
   Entity,
   JoinTable,
@@ -30,7 +29,7 @@ export default class Post extends _BaseEntity {
   cover?: string;
 
   @Column({ default: 0, type: 'tinyint' })
-  type: number; // video 0 or topic 1
+  type: number;
 
   @Column({ type: 'int', default: 0 })
   up: number;
@@ -45,18 +44,6 @@ export default class Post extends _BaseEntity {
   videos?: Video[];
 
   rate: number;
-
-  calcAppr() {
-    // post 的 appraisals 走单独接口查询
-    if (this.appraisals && this.appraisals.length) {
-      this.rate =
-        this.appraisals.reduce((_, __) => _ + __.rate, 0) /
-        this.appraisals.length;
-      delete this.appraisals;
-    }
-    // post 每加载一个 relation 会走一遍这里 所有使用上次加载 appraisal 时的数据
-    this.rate = this.rate > 0 ? this.rate : 0;
-  }
 
   @OneToMany(() => Appraisal, (appraisals) => appraisals.bindPost)
   appraisals?: Appraisal[];

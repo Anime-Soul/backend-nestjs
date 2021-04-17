@@ -10,7 +10,7 @@ export class AuthService {
 
   hashUserPwd(password: string) {
     return crypto
-      .createHmac('sha512', process.env.PWD_SOAT || '')
+      .createHmac('sha512', process.env.PWD_SOAT)
       .update(password + process.env.PWD_SOAT);
   }
 

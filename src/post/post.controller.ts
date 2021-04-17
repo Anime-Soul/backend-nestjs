@@ -16,7 +16,7 @@ import { OrderByCondition, Repository } from 'typeorm';
 import { CreatePostArgs, QueryPostsArgs, CommentDto } from './post.dto';
 import { PostService } from './post.service';
 import Post from '../entity/Post';
-import { ROLESMAP } from '../type';
+import { POST_TYPE, ROLESMAP } from '../type';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Public } from '../common/decorators/auth.decorator';
@@ -74,7 +74,7 @@ export class PostController {
     if (creatorId) rep.andWhere('p.creatorId=:creatorId', { creatorId });
 
     // https://blog.csdn.net/qq_34637782/article/details/101029487
-    const p = await rep
+    const resource: (Post & { videoCount?: number })[] = await rep
       .select([
         'p',
         'u.id',
@@ -97,7 +97,13 @@ export class PostController {
       // .groupBy('p.id, c.id, t.id') //avg 需要这个
       .getMany();
 
-    return { code: 200, data: p };
+    let result: any;
+
+    if (type == POST_TYPE.VIDEO) {
+      result = resource.filter((_) => _.videoCount < 1);
+    }
+
+    return { code: 200, data: result };
   }
 
   @Get(':id')
@@ -128,7 +134,7 @@ export class PostController {
   async getVideoByPostId(@Param('id') id: string) {
     const v = await this.VideoRepository.find({
       where: { bindPost: id },
-      order: { episode: 1 },
+      order: { episode: 'ASC' },
     });
     return { code: 200, data: v };
   }

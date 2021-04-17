@@ -30,3 +30,14 @@ export interface JWT_USER_INFO {
 export interface IReq extends Request {
   user: JWT_USER_INFO;
 }
+
+export enum POST_TYPE {
+  VIDEO = 0,
+  POST = 1,
+}
+
+export enum EVERT_STATUS {
+  OK = 0,
+  BLOCKED = 1,
+  DELECTED = -1,
+}
