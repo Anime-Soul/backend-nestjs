@@ -100,7 +100,7 @@ export class PostController {
     let result: any;
 
     if (type == POST_TYPE.VIDEO) {
-      result = resource.filter((_) => _.videoCount < 1);
+      result = resource.filter((_) => _.videoCount > 0);
     }
 
     return { code: 200, data: result };
