@@ -72,12 +72,12 @@ export class UserController {
     const _id = id || user.userId;
     const u = await this.userService.findOne(_id);
 
-    return this.userService.update({ id: _id || user.userId, ...u, ...params });
+    return this.userService.update({ id: _id, ...u, ...params });
   }
 
   @Get('me')
-  async me(@Req() { user }) {
-    const m = await this.userService.findOne(user.userId);
+  async me(@Req() { user }, @Body() id: string) {
+    const m = await this.userService.findOne(id || user.userId);
     return { code: m ? 200 : 404, data: m };
   }
 
