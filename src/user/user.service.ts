@@ -17,7 +17,7 @@ export class UserService {
   ) {}
 
   async signup(param: SignUpDto): IResponse<User> {
-    const { email, password, repassword } = param;
+    const { email, password, repassword, imei } = param;
 
     if (password !== repassword) {
       return { code: 400, message: '两次密码输入不一致' };
@@ -28,20 +28,19 @@ export class UserService {
       return { code: 400, message: '用户已存在' };
     }
 
-    if (param.imei) {
-      const imei = await Imei.findOne({
-        where: { imei: param.imei },
+    if (imei) {
+      const raw = await Imei.findOne({
+        where: { imei },
         select: ['imei'],
       });
-      if (imei.imei) return { code: 400, message: '请勿重复注册' };
+      if (raw?.imei) return { code: 400, message: '请勿重复注册' };
     }
 
     const hash = this.authService.hashUserPwd(password).digest('hex');
     const u = await this.usersRepository
       .create({ email: email, password: hash })
       .save();
-    if (param.imei)
-      await Imei.create({ imei: param.imei, userId: u.id }).save();
+    if (imei) await Imei.create({ imei: imei, userId: u.id }).save();
     u.token = this.authService.certificate(u);
     delete u.password;
 

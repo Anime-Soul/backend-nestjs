@@ -115,7 +115,7 @@ export class PostController {
       .loadRelationCountAndMap('p.videoCount', 'p.videos', 'v')
       .getOne();
 
-    post.rate = 0;
+    if (!post) return { code: 404 };
 
     const { rate } = await this.AppraisalRepository.createQueryBuilder('a')
       .select(['a.rate'])
@@ -123,9 +123,9 @@ export class PostController {
       .select('AVG(a.rate)', 'rate')
       .getRawOne<{ rate: string }>();
 
-    if (rate !== null) {
-      post.rate = parseInt(rate);
-    }
+    post.rate = rate ? parseInt(rate) : 0;
+
+    this.postService.glance(id);
 
     return { code: 200, data: post };
   }
@@ -226,9 +226,7 @@ export class PostController {
 
   @Get(':postId/glance')
   async glance(@Param('postId') id: string) {
-    const v = await this.PostRepository.findOne(id, { select: ['view'] });
-    await this.PostRepository.update(id, { view: v.view + 1 });
-    return { code: 200 };
+    return this.postService.glance(id);
   }
 
   @Get(':postId/up') //TODO: uper

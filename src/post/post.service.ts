@@ -22,4 +22,10 @@ export class PostService {
     delete post.creator;
     return { code: HttpStatus.CREATED, data: post };
   }
+
+  async glance(id: string) {
+    const v = await this.postRepository.findOne(id, { select: ['view'] });
+    await this.postRepository.update(id, { view: v.view + 1 });
+    return { code: 200 };
+  }
 }
