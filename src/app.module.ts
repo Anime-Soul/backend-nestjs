@@ -18,6 +18,7 @@ import User from './entity/User';
 import Video from './entity/Video';
 import Post from './entity/Post';
 import Comment from './entity/Comment';
+import Imei from './entity/Imie';
 
 @Module({
   imports: [
@@ -33,7 +34,7 @@ import Comment from './entity/Comment';
       autoLoadEntities: true,
       synchronize: !isProd,
       keepConnectionAlive: true,
-      logger: isProd ? 'file' : 'advanced-console',
+      logger: isProd ? 'advanced-console' : 'advanced-console',
       logging: isProd ? ['warn', 'error'] : ['query', 'error', 'warn'],
     }),
     TypeOrmModule.forFeature([
@@ -44,6 +45,7 @@ import Comment from './entity/Comment';
       Category,
       Tag,
       Comment,
+      Imei,
     ]),
     UserModule,
     AuthModule,

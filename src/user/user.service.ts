@@ -6,6 +6,7 @@ import { IResponse } from 'src/type';
 import { SignUpDto, UpdateUserDto } from './user.dto';
 import { AuthService } from 'src/auth/auth.service';
 import { SqlQueryErrorRes } from 'src/common/util/sql.error.response';
+import Imei from 'src/entity/Imie';
 
 @Injectable()
 export class UserService {
@@ -26,13 +27,21 @@ export class UserService {
     if (user) {
       return { code: 400, message: '用户已存在' };
     }
-    const hash = this.authService.hashUserPwd(password);
+
+    if (param.imei) {
+      const imei = await Imei.findOne({
+        where: { imei: param.imei },
+        select: ['imei'],
+      });
+      if (imei.imei) return { code: 400, message: '请勿重复注册' };
+    }
+
+    const hash = this.authService.hashUserPwd(password).digest('hex');
     const u = await this.usersRepository
-      .create({
-        email: email,
-        password: hash.digest('hex'),
-      })
+      .create({ email: email, password: hash })
       .save();
+    if (param.imei)
+      await Imei.create({ imei: param.imei, userId: u.id }).save();
     u.token = this.authService.certificate(u);
     delete u.password;
 

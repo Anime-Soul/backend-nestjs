@@ -14,6 +14,8 @@ export class SignUpDto {
   @MinLength(8)
   @IsNotEmpty()
   repassword: string;
+
+  imei?: string;
 }
 
 export class SignInDto {
