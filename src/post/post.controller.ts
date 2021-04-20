@@ -18,7 +18,7 @@ import { PostService } from './post.service';
 import Post from '../entity/Post';
 import { POST_TYPE, ROLESMAP } from '../type';
 import { RolesGuard } from '../common/guards/roles.guard';
-import { Roles } from '../common/decorators/roles.decorator';
+import { ExRoles, Roles } from '../common/decorators/roles.decorator';
 import { Public } from '../common/decorators/auth.decorator';
 import { SqlQueryErrorRes } from '../common/util/sql.error.response';
 import Comment from '../entity/Comment';
@@ -41,7 +41,7 @@ export class PostController {
   ) {}
 
   @P()
-  @Roles(ROLESMAP.WRITER, ROLESMAP.ADMIN, ROLESMAP.ROOT)
+  @ExRoles([ROLESMAP.Blocked])
   create(@Body() params: CreatePostArgs, @Req() { user }) {
     return this.postService.create({ creatorId: user.userId, ...params });
   }

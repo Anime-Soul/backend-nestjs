@@ -11,7 +11,7 @@ export const ROLESMAP = {
   ADMIN: 1,
   WRITER: 2,
   HUMAN: 3,
-  READER: 4,
+  Blocked: 4,
 };
 
 export class ListDto {

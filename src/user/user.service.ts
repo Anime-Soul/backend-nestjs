@@ -50,7 +50,15 @@ export class UserService {
   async signin({ email, password }) {
     const user = await this.usersRepository.findOne({
       where: { email },
-      select: ['id', 'password', 'username', 'roleLevel', 'email'],
+      select: [
+        'id',
+        'password',
+        'username',
+        'roleLevel',
+        'email',
+        'avatar',
+        'bio',
+      ],
     });
 
     if (user) {
@@ -60,13 +68,18 @@ export class UserService {
       );
       if (authResult) {
         user.token = this.authService.certificate(user);
-        return { code: 200, data: { user } };
+        delete user.password;
+        return { code: 200, data: user };
       } else {
         return { code: 403, message: '账号或密码错误' };
       }
     } else {
       return { code: 404 };
     }
+  }
+
+  certificate(user: User) {
+    return this.authService.certificate(user);
   }
 
   findOne(id: string): Promise<User | undefined> {

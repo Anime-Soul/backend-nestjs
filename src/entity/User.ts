@@ -7,7 +7,7 @@ import Comment from './Comment';
 
 @Entity()
 export default class User extends _BaseEntity {
-  @Column({ default: ROLESMAP.READER, type: 'tinyint' })
+  @Column({ default: ROLESMAP.HUMAN, type: 'tinyint' })
   roleLevel: number;
 
   @Column({ nullable: true, select: false })
