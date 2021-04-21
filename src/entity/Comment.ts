@@ -14,6 +14,9 @@ export default class Comment extends _BaseEntity {
   @Column()
   content: string;
 
-  @OneToMany(() => Comment, (c) => c.parent, { nullable: true })
+  @OneToMany(() => Comment, (c) => c.children)
+  children?: Comment;
+
+  @ManyToOne(() => Comment, (c) => c.children)
   parent?: Comment;
 }

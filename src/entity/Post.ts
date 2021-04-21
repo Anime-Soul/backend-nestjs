@@ -58,4 +58,8 @@ export default class Post extends _BaseEntity {
 
   @OneToMany(() => Comment, (comment) => comment.bindPost, { nullable: true })
   comments?: Comment[];
+
+  @ManyToMany(() => User, (u) => u.like)
+  @JoinTable()
+  liker?: User[];
 }

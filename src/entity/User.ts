@@ -1,10 +1,9 @@
 import { ROLESMAP } from 'src/type';
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
 import Appraisal from './Appraisal';
 import Post from './Post';
 import _BaseEntity from './_BaseEntity';
 import Comment from './Comment';
-
 @Entity()
 export default class User extends _BaseEntity {
   @Column({ default: ROLESMAP.HUMAN, type: 'tinyint' })
@@ -43,4 +42,7 @@ export default class User extends _BaseEntity {
 
   @OneToMany(() => Comment, (comment) => comment.creator)
   comments?: Comment[];
+
+  @ManyToMany(() => Post, (up) => up.liker)
+  like?: Post[];
 }

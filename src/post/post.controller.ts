@@ -16,7 +16,7 @@ import { OrderByCondition, Repository } from 'typeorm';
 import { CreatePostArgs, QueryPostsArgs, CommentDto } from './post.dto';
 import { PostService } from './post.service';
 import Post from '../entity/Post';
-import { POST_TYPE, ROLESMAP } from '../type';
+import { IReq, POST_TYPE, ROLESMAP } from '../type';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { ExRoles, Roles } from '../common/decorators/roles.decorator';
 import { Public } from '../common/decorators/auth.decorator';
@@ -55,8 +55,9 @@ export class PostController {
 
     switch (sort) {
       case 'hot':
-        _sort['p.up'] = 'DESC';
+        _sort['p.liker'] = 'DESC';
         _sort['p.view'] = 'DESC';
+        _sort['p.comments'] = 'DESC';
       //TODO: comment 多少排序
       default:
         break;
@@ -91,13 +92,14 @@ export class PostController {
       .leftJoin('p.appraisals', 'a')
       .loadRelationCountAndMap('p.commentCount', 'p.comments', 'cm')
       .loadRelationCountAndMap('p.videoCount', 'p.videos', 'v')
+      .loadRelationCountAndMap('p.likerCount', 'p.liker', 'l')
       .skip(offset * limit)
       .take(limit)
       .orderBy(_sort)
       // .groupBy('p.id, c.id, t.id') //avg 需要这个
       .getMany();
 
-    let result: any;
+    let result = resource;
 
     if (type == POST_TYPE.VIDEO) {
       result = resource.filter((_) => _.videoCount > 0);
@@ -113,6 +115,7 @@ export class PostController {
       .leftJoinAndSelect('p.creator', 'u')
       .loadRelationCountAndMap('p.commentCount', 'p.comments', 'cm')
       .loadRelationCountAndMap('p.videoCount', 'p.videos', 'v')
+      .loadRelationCountAndMap('p.likerCount', 'p.liker', 'l')
       .getOne();
 
     if (!post) return { code: 404 };
@@ -224,15 +227,18 @@ export class PostController {
     return { code: 200, data: appraisals };
   }
 
-  @Get(':postId/glance')
+  @Patch(':postId/glance')
   async glance(@Param('postId') id: string) {
     return this.postService.glance(id);
   }
 
-  @Get(':postId/up') //TODO: uper
-  async up(@Param('postId') id: string) {
-    const v = await this.PostRepository.findOne(id, { select: ['up'] });
-    await this.PostRepository.update(id, { up: v.up + 1 });
+  @Patch(':postId/up')
+  async up(@Param('postId') id: string, @Req() { user }: IReq) {
+    await this.PostRepository.createQueryBuilder('p')
+      .relation(Post, 'liker')
+      .of(id)
+      .add(user.userId);
+
     return { code: 200 };
   }
 

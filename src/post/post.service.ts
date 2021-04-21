@@ -19,7 +19,6 @@ export class PostService {
         ...options,
       })
       .save();
-    delete post.creator;
     return { code: HttpStatus.CREATED, data: post };
   }
 
