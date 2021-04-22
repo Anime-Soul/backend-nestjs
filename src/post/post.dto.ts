@@ -4,8 +4,7 @@ import { IsNotEmpty } from 'class-validator';
 import { POST_TYPE } from 'src/type';
 
 class OptionalPostField {
-  @IsNotEmpty()
-  title: string;
+  title?: string;
 
   subtitle?: string;
 

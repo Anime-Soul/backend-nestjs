@@ -48,7 +48,7 @@ export class PostController {
 
   @Public()
   @Get('list')
-  async list(@Query() body: QueryPostsArgs) {
+  async list(@Query() body: QueryPostsArgs, @Req() { user }: IReq) {
     const rep = this.PostRepository.createQueryBuilder('p');
     const { offset = 0, limit = 15, type = 0, title, sort, creatorId } = body;
     const _sort: OrderByCondition = {};
@@ -76,7 +76,7 @@ export class PostController {
     if (creatorId) rep.andWhere('p.creatorId=:creatorId', { creatorId });
 
     // https://blog.csdn.net/qq_34637782/article/details/101029487
-    const resource: (Post & { videoCount?: number })[] = await rep
+    const qb = rep
       .select([
         'p',
         'u.id',
@@ -85,6 +85,8 @@ export class PostController {
         'u.avatar',
         't',
         'c',
+        // 'lk.id',
+        // 'IF(ISNULL(lk.id),0,1) AS is_star',
         // 'AVG(a.rate) rate', // 这里拿不到去详情页在请求吧
       ])
       .leftJoin('p.creator', 'u')
@@ -93,17 +95,33 @@ export class PostController {
       .leftJoin('p.appraisals', 'a')
       .loadRelationCountAndMap('p.commentCount', 'p.comments', 'cm')
       .loadRelationCountAndMap('p.videoCount', 'p.videos', 'v')
-      .loadRelationCountAndMap('p.likerCount', 'p.liker', 'l')
+      .loadRelationCountAndMap('p.likerCount', 'p.liker', 'l');
+
+    if (user?.userId)
+      qb.leftJoin('p.liker', 'lk', 'lk.id=:id', { id: 1 }).addSelect('lk.id');
+    //   .addSelect(
+    //   'IF(ISNULL(lk.id),0,1) AS is_star',
+    // );
+
+    let result: Array<any> = await qb
       .skip(offset * limit)
       .take(limit)
       .orderBy(_sort)
       // .groupBy('p.id, c.id, t.id') //avg 需要这个
       .getMany();
 
-    let result = resource;
+    result = result.map((_) => {
+      if (_?.liker?.length > 0) {
+        _.isLike = 1;
+      } else {
+        _.isLike = 0;
+      }
+      delete _.liker;
+      return _;
+    });
 
     if (type == POST_TYPE.VIDEO) {
-      result = resource.filter((_) => _.videoCount > 0);
+      result = result.filter((_) => _.videoCount > 0);
     }
 
     return { code: 200, data: result };
@@ -239,6 +257,16 @@ export class PostController {
       .relation(Post, 'liker')
       .of(id)
       .add(user.userId);
+
+    return { code: 200 };
+  }
+
+  @Patch(':postId/down')
+  async down(@Param('postId') id: string, @Req() { user }: IReq) {
+    await this.PostRepository.createQueryBuilder('p')
+      .relation(Post, 'liker')
+      .of(id)
+      .remove(user.userId);
 
     return { code: 200 };
   }

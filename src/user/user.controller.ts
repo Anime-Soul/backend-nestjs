@@ -18,6 +18,7 @@ import { SignInDto, SignUpDto, UpdateUserDto } from './user.dto';
 import { UserService } from './user.service';
 import { IReq, ROLESMAP } from 'src/type';
 import RegCode from 'src/entity/RegCode';
+import * as crypto from 'crypto';
 
 @Controller('user')
 export class UserController {
@@ -88,7 +89,14 @@ export class UserController {
     }
     const list = [];
     for (let index = 0; index < num; index++) {
-      list.push((await RegCode.create({ status: 0 }).save()).id);
+      list.push(
+        (
+          await RegCode.create({
+            status: 0,
+            code: crypto.randomBytes(8).toString(),
+          }).save()
+        ).id,
+      );
     }
 
     return list;

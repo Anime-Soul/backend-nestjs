@@ -15,6 +15,8 @@ export class SignUpDto {
   @IsNotEmpty()
   repassword: string;
 
+  username?: string;
+
   imei?: string;
 }
 
