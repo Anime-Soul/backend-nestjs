@@ -32,9 +32,6 @@ export default class Post extends _BaseEntity {
   type: number;
 
   @Column({ type: 'int', default: 0 })
-  up: number;
-
-  @Column({ type: 'int', default: 0 })
   view: number;
 
   @ManyToOne(() => User, (user) => user.posts, { nullable: false })

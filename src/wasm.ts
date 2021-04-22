@@ -13,23 +13,6 @@ const wasm = async (req: Request, res: Response) => {
   const type = content.includes('m3u8') ? 'hls' : 'mp4';
   const code = 200;
   switch (tag) {
-    case 'hcy':
-      const info = atob(content).split(',');
-      url = `https://caiyun.feixin.10086.cn/webdisk2/downLoadAction!downloadToPC.action?contentID=${info[1]}&shareContentIDs=${info[1]}&catalogList=&downloadSize=214446914`;
-      const cookie: string = await fetch(
-        `https://api.clicli.us/cookie/${info[0]}`,
-      )
-        .then((resp) => resp.json())
-        .then((data) => data.result.hcy);
-      url = await fetch(url, {
-        headers: {
-          Cookie: cookie,
-          Host: 'caiyun.feixin.10086.cn',
-        },
-      })
-        .then((resp) => resp.json())
-        .then((data) => data.downloadUrl);
-      return res.send({ code, data: { url, type: 'mp4' } });
     case '1096':
       const vid = await fetch(
         `https://www.wegame.com.cn/api/forum/lua/wegame_feeds/get_feed_item_data?p={"iid":"${content}","uid":211762212}`,
@@ -73,6 +56,15 @@ const wasm = async (req: Request, res: Response) => {
         url =
           `https://apd-vliveachy.apdcdn.tc.qq.com/vmtt.tc.qq.com/1098` + sha;
         return res.send({ code, data: { url, type } });
+      } else if (content.includes('xiaohongshu')) {
+        //上限 15 分钟
+        fetch(content)
+          .then((_) => _.text())
+          .then((_) => {
+            const [, , url] = /<video(.*?)src\="(.*?)"/.exec(_);
+            url.replace('amp;', '');
+            res.send({ code, data: { url, type } });
+          });
       }
       return res.send({ code, data: { url, type } });
   }
@@ -102,3 +94,21 @@ const tepl = () =>
  *
  *
  */
+
+// case 'hcy':
+//   const info = atob(content).split(',');
+//   url = `https://caiyun.feixin.10086.cn/webdisk2/downLoadAction!downloadToPC.action?contentID=${info[1]}&shareContentIDs=${info[1]}&catalogList=&downloadSize=214446914`;
+//   const cookie: string = await fetch(
+//     `https://api.clicli.us/cookie/${info[0]}`,
+//   )
+//     .then((resp) => resp.json())
+//     .then((data) => data.result.hcy);
+//   url = await fetch(url, {
+//     headers: {
+//       Cookie: cookie,
+//       Host: 'caiyun.feixin.10086.cn',
+//     },
+//   })
+//     .then((resp) => resp.json())
+//     .then((data) => data.downloadUrl);
+//   return res.send({ code, data: { url, type: 'mp4' } });

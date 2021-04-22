@@ -55,10 +55,11 @@ export class PostController {
 
     switch (sort) {
       case 'hot':
-        _sort['p.liker'] = 'DESC';
         _sort['p.view'] = 'DESC';
-        _sort['p.comments'] = 'DESC';
-      //TODO: comment 多少排序
+
+      // TODO:
+      // _sort['p.liker'] = 'DESC';
+      // _sort['p.comments'] = 'DESC';
       default:
         break;
     }

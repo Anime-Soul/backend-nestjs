@@ -3,7 +3,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Connection } from 'typeorm';
+import { Connection, getConnectionOptions } from 'typeorm';
 import { PostModule } from './post/post.module';
 import { VideoModule } from './video/video.module';
 import { TagModule } from './tag/tag.module';
@@ -14,7 +14,12 @@ import { CommentModule } from './comment/comment.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, cache: true }),
-    TypeOrmModule.forRoot(),
+    TypeOrmModule.forRootAsync({
+      useFactory: async () =>
+        Object.assign(await getConnectionOptions(), {
+          autoLoadEntities: true,
+        }),
+    }),
     UserModule,
     AuthModule,
     PostModule,
