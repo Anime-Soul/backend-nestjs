@@ -63,13 +63,19 @@ export class PostController {
       default:
         break;
     }
+    _sort['p.createdAt'] = 'DESC'; // 就近原则
 
-    _sort['p.createdAt'] = 'DESC';
-
-    if (title)
-      rep.where('p.title like :title', {
-        title: `%${title}%`,
-      });
+    if (title) {
+      if (type == POST_TYPE.VIDEO) {
+        rep.where('p.title like :title', {
+          title: `%${title}%`,
+        });
+      } else if (type == POST_TYPE.POST) {
+        rep.where('p.content like :content', {
+          content: `%${title}%`,
+        });
+      }
+    }
 
     if (type) rep.andWhere('p.type=:type', { type });
 
@@ -98,19 +104,21 @@ export class PostController {
       .loadRelationCountAndMap('p.likerCount', 'p.liker', 'l');
 
     if (user?.userId)
-      qb.leftJoin('p.liker', 'lk', 'lk.id=:id', { id: 1 }).addSelect('lk.id');
+      qb.leftJoin('p.liker', 'lk', 'lk.id=:id', { id: user.userId }).addSelect(
+        'lk.id',
+      );
     //   .addSelect(
     //   'IF(ISNULL(lk.id),0,1) AS is_star',
     // );
 
-    let result: Array<any> = await qb
+    const raw: Array<any> = await qb
       .skip(offset * limit)
       .take(limit)
       .orderBy(_sort)
       // .groupBy('p.id, c.id, t.id') //avg 需要这个
       .getMany();
 
-    result = result.map((_) => {
+    let result = raw.map((_) => {
       if (_?.liker?.length > 0) {
         _.isLike = 1;
       } else {
@@ -219,11 +227,11 @@ export class PostController {
         .relation(Comment, 'creator')
         .of(c.id)
         .set(user.userId);
+      const comment = await Comment.findOne(c.id);
+      return { code: 200, data: comment };
     } catch (error) {
       return { code: 500, message: error.toString() };
     }
-
-    return { code: 200 };
   }
 
   //TODO 分页
@@ -231,6 +239,7 @@ export class PostController {
   async getCommentsByPostId(@Param('postId') id: string) {
     const comments = await this.CommentRepository.find({
       where: { bindPost: id },
+      order: { createdAt: 'DESC' },
       relations: ['creator'],
     });
     return { code: 200, data: comments };

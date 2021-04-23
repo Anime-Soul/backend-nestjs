@@ -42,7 +42,7 @@ export class UserService {
       .create({
         email: email,
         password: hash,
-        username: username || crypto.randomBytes(8).toString(),
+        username: username || crypto.randomBytes(8).toString('hex'),
       })
       .save();
     if (imei) await Imei.create({ imei: imei, userId: u.id }).save();
