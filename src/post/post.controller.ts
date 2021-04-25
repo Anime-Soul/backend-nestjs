@@ -24,7 +24,6 @@ import { SqlQueryErrorRes } from '../common/util/sql.error.response';
 import Comment from '../entity/Comment';
 import Appraisal from '../entity/Appraisal';
 import Video from '../entity/Video';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { JwtService } from '@nestjs/jwt';
 
 @Controller('post')
@@ -93,8 +92,8 @@ export class PostController {
         'u.avatar',
         't',
         'c',
+        // 'a.rate',
         // 'lk.id',
-        // 'IF(ISNULL(lk.id),0,1) AS is_star',
         // 'AVG(a.rate) rate', // 这里拿不到去详情页在请求吧
       ])
       .leftJoin('p.creator', 'u')
@@ -105,12 +104,19 @@ export class PostController {
       .loadRelationCountAndMap('p.videoCount', 'p.videos', 'v')
       .loadRelationCountAndMap('p.likerCount', 'p.liker', 'l');
 
-    if (req.headers.authorization)
-      qb.leftJoin('p.liker', 'lk', 'lk.id=:id', {
-        id: new JwtService({ secret: process.env.JWT_SECRET }).decode(
-          req.headers.authorization.substring(7),
-        )['userId'],
-      }).addSelect('lk.id');
+    if (req.headers.authorization) {
+      const user: any = new JwtService({
+        secret: process.env.JWT_SECRET,
+      }).decode(req.headers.authorization.substring(7));
+
+      user?.userId &&
+        qb
+          .leftJoin('p.liker', 'lk', 'lk.id=:id', {
+            id: user.userId,
+          })
+          .addSelect('lk.id');
+    }
+
     //   .addSelect(
     //   'IF(ISNULL(lk.id),0,1) AS is_star',
     // );
