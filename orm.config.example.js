@@ -15,4 +15,5 @@ module.exports = {
   keepConnectionAlive: true,
   logger: isProd ? 'advanced-console' : 'advanced-console',
   logging: isProd ? ['warn', 'error'] : ['query', 'error', 'warn'],
+  charset: 'utf8mb4_unicode_ci',
 };
