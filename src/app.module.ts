@@ -10,6 +10,7 @@ import { TagModule } from './tag/tag.module';
 import { CategoryModule } from './category/category.module';
 import { AppController } from './app.controller';
 import { CommentModule } from './comment/comment.module';
+import { AppraisalModule } from './appraisal/appraisal.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { CommentModule } from './comment/comment.module';
     TagModule,
     CategoryModule,
     CommentModule,
+    AppraisalModule,
   ],
   providers: [],
   controllers: [AppController],

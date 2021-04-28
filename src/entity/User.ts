@@ -45,4 +45,7 @@ export default class User extends _BaseEntity {
 
   @ManyToMany(() => Post, (up) => up.liker)
   like?: Post[];
+
+  @ManyToMany(() => Appraisal, (la) => la.liker)
+  likeAppraisals?: Appraisal[];
 }

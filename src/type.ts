@@ -37,7 +37,7 @@ export enum POST_TYPE {
 }
 
 export enum EVERT_STATUS {
-  OK = 0,
-  BLOCKED = 1,
+  OK = 1,
+  BLOCKED = 0,
   DELECTED = -1,
 }

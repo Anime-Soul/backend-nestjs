@@ -15,7 +15,7 @@ export class PostService {
   async create({ creatorId, ...options }: CreatePostArgs & { creatorId }) {
     const post = await this.postRepository
       .create({
-        creator: await User.findOne(creatorId),
+        creator: creatorId,
         ...options,
       })
       .save();

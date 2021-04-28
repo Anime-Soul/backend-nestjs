@@ -1,3 +1,4 @@
+import { EVERT_STATUS } from 'src/type';
 import {
   BaseEntity,
   Column,
@@ -16,6 +17,6 @@ export default class extends BaseEntity {
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  @Column({ type: 'tinyint', default: 0 })
+  @Column({ type: 'tinyint', default: EVERT_STATUS.OK })
   status: number;
 }

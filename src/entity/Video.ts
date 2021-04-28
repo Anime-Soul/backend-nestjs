@@ -19,7 +19,9 @@ export default class Video extends _BaseEntity {
   @Column({ nullable: true })
   cover?: string;
 
-  @ManyToOne(() => Post, (post) => post.videos)
+  @ManyToOne(() => Post, (post) => post.videos, {
+    onDelete: 'SET NULL',
+  })
   bindPost?: Post;
 
   @Column({ nullable: true })

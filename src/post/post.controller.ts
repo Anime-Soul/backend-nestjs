@@ -44,7 +44,10 @@ export class PostController {
   @P()
   @ExRoles([ROLESMAP.Blocked])
   create(@Body() params: CreatePostArgs, @Req() { user }) {
-    return this.postService.create({ creatorId: user.userId, ...params });
+    return {
+      code: HttpStatus.CREATED,
+      data: this.postService.create({ creatorId: user.userId, ...params }),
+    };
   }
 
   @Public()
@@ -99,7 +102,7 @@ export class PostController {
       .leftJoin('p.creator', 'u')
       .leftJoin('p.categories', 'c')
       .leftJoin('p.tags', 't')
-      .leftJoin('p.appraisals', 'a')
+      // .leftJoin('p.appraisals', 'a') // 这里拿不到去详情页在请求吧
       .loadRelationCountAndMap('p.commentCount', 'p.comments', 'cm')
       .loadRelationCountAndMap('p.videoCount', 'p.videos', 'v')
       .loadRelationCountAndMap('p.likerCount', 'p.liker', 'l');

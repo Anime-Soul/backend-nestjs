@@ -1,10 +1,21 @@
-import { Column, Entity, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import Post from './Post';
 import User from './User';
 import _BaseEntity from './_BaseEntity';
+import Comment from './Comment';
 
 @Entity()
 export default class Appraisal extends _BaseEntity {
+  @Column({ type: 'varchar', nullable: true })
+  title?: string;
+
   @Column({ type: 'text' })
   content: string;
 
@@ -20,4 +31,11 @@ export default class Appraisal extends _BaseEntity {
     onDelete: 'SET NULL',
   })
   creator: User;
+
+  @OneToMany(() => Comment, (comment) => comment.bindAppraisal)
+  comments?: Comment[];
+
+  @ManyToMany(() => User, (u) => u.like)
+  @JoinTable()
+  liker?: User[];
 }
