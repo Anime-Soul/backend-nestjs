@@ -4,6 +4,7 @@ import Appraisal from './Appraisal';
 import Post from './Post';
 import _BaseEntity from './_BaseEntity';
 import Comment from './Comment';
+import RegCode from './RegCode';
 @Entity()
 export default class User extends _BaseEntity {
   @Column({ default: ROLESMAP.HUMAN, type: 'tinyint' })
@@ -48,4 +49,7 @@ export default class User extends _BaseEntity {
 
   @ManyToMany(() => Appraisal, (la) => la.liker)
   likeAppraisals?: Appraisal[];
+
+  @OneToMany(() => RegCode, (r) => r.ower)
+  regCode: RegCode;
 }

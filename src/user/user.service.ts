@@ -8,6 +8,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { SqlQueryErrorRes } from 'src/common/util/sql.error.response';
 import Imei from 'src/entity/Imie';
 import * as crypto from 'crypto';
+import RegCode from 'src/entity/RegCode';
 
 @Injectable()
 export class UserService {
@@ -18,7 +19,7 @@ export class UserService {
   ) {}
 
   async signup(param: SignUpDto): IResponse<User> {
-    const { email, password, repassword, imei, username } = param;
+    const { email, password, repassword, imei, username, regCode } = param;
 
     if (password !== repassword) {
       return { code: 400, message: '两次密码输入不一致' };
@@ -46,6 +47,7 @@ export class UserService {
       })
       .save();
     if (imei) await Imei.create({ imei: imei, userId: u.id }).save();
+    this.genReCode(u.id, 15);
     u.token = this.authService.certificate(u);
     delete u.password;
 
@@ -125,5 +127,19 @@ export class UserService {
         .take(limit)
         .getMany(),
     };
+  }
+
+  async genReCode(userId: string, limit: number) {
+    const code = [];
+    for (let index = 0; index < limit; index++) {
+      code.push(
+        await RegCode.create({
+          status: 0,
+          ower: { id: userId },
+          code: crypto.randomBytes(8).toString(),
+        }).save(),
+      );
+    }
+    return code;
   }
 }

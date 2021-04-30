@@ -1,9 +1,19 @@
-import { Body, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Param,
+  Post as PostReq,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Public } from 'src/common/decorators/auth.decorator';
 import { ExRoles } from 'src/common/decorators/roles.decorator';
 import Appraisal from 'src/entity/Appraisal';
-import { QueryPostsArgs } from 'src/post/post.dto';
+import Comment from 'src/entity/Comment';
+import { CommentDto, QueryPostsArgs } from 'src/post/post.dto';
 import { EVERT_STATUS, ROLESMAP } from 'src/type';
 import { OrderByCondition, Repository } from 'typeorm';
 import { OptionalAppraisalField } from './appraisal.dto';
@@ -15,13 +25,18 @@ export class AppraisalController {
     private readonly AppraisalRepository: Repository<Appraisal>,
   ) {}
 
-  @Post()
+  @PostReq()
   @ExRoles([ROLESMAP.Blocked])
-  create(@Body() params: OptionalAppraisalField, @Req() { user }) {
-    return this.AppraisalRepository.create({
+  async create(
+    @Body() { postId, ...params }: OptionalAppraisalField,
+    @Req() { user },
+  ) {
+    const data = await this.AppraisalRepository.create({
       creator: user.userId,
+      bindPost: { id: postId },
       ...params,
     }).save();
+    return { code: HttpStatus.CREATED, data };
   }
 
   @Public()
@@ -30,18 +45,6 @@ export class AppraisalController {
     const rep = this.AppraisalRepository.createQueryBuilder('a');
     const { offset = 0, limit = 15, title, sort, creatorId } = body;
     const _sort: OrderByCondition = {};
-
-    switch (sort) {
-      case 'hot':
-        _sort['a.view'] = 'DESC';
-
-      // TODO:
-      // _sort['p.liker'] = 'DESC';
-      // _sort['p.comments'] = 'DESC';
-      default:
-        break;
-    }
-    _sort['a.createdAt'] = 'DESC'; // 就近原则
 
     if (title) {
       rep.where('a.title like :title', {
@@ -68,12 +71,26 @@ export class AppraisalController {
       ])
       .leftJoin('a.creator', 'u')
       .leftJoin('a.bindPost', 'p')
-      .loadRelationCountAndMap('a.commentCount', 'a.comments', 'cm')
-      .loadRelationCountAndMap('a.likerCount', 'a.liker', 'l');
+      .loadRelationCountAndMap('a.commentCount', 'a.comments')
+      .loadRelationCountAndMap('a.likerCount', 'a.liker');
+
+    switch (sort) {
+      case 'hot':
+        qb.addSelect('COUNT(cm.id)', 'commentCount')
+          .leftJoin('a.comments', 'cm')
+          .addSelect('COUNT(lk.id)', 'likerCount')
+          .leftJoin('a.liker', 'lk');
+        _sort['commentCount'] = 'DESC';
+        _sort['likerCount'] = 'DESC';
+      default:
+        break;
+    }
+    _sort['a.createdAt'] = 'DESC'; // 就近原则
 
     const raw = await qb
       .skip(offset * limit)
       .take(limit)
+      .orderBy('a.id')
       .orderBy(_sort)
       .getMany();
 
@@ -85,21 +102,52 @@ export class AppraisalController {
     const appraisal = await this.AppraisalRepository.createQueryBuilder('a')
       .where('a.id = :pid', { pid: id })
       .leftJoinAndSelect('a.creator', 'u')
-      .leftJoin('a.bindPost', 'p')
-      .loadRelationCountAndMap('a.commentCount', 'p.comments', 'cm')
-      .loadRelationCountAndMap('a.likerCount', 'a.liker', 'l')
+      .leftJoinAndSelect('a.bindPost', 'p')
+      .leftJoinAndSelect('a.comments', 'commenst')
+      .leftJoinAndSelect('a.liker', 'liker')
       .getOne();
 
     if (!appraisal) return { code: 404 };
 
-    const { rate } = await this.AppraisalRepository.createQueryBuilder('a')
-      .select(['a.rate'])
-      .where('bindPostId = :id', { id: appraisal.bindPost })
-      .select('AVG(a.rate)', 'rate')
-      .getRawOne<{ rate: string }>();
-
-    appraisal.bindPost.rate = rate ? parseInt(rate) : 0;
-
     return { code: 200, data: appraisal };
+  }
+
+  @PostReq(':appraisalId/comment')
+  async comment(
+    @Body() { ...body }: CommentDto,
+    @Req() { user },
+    @Param('appraisalId') id: string,
+  ) {
+    try {
+      const p = await this.AppraisalRepository.findOne(id, {
+        select: ['status'],
+      });
+      if (!p || p.status < 0) return { code: 403, message: '宿主被屏蔽' };
+      const c = await Comment.create({
+        content: body.content,
+      }).save();
+      await this.AppraisalRepository.createQueryBuilder('a')
+        .relation(Appraisal, 'comments')
+        .of(id)
+        .add(c.id);
+      await Comment.createQueryBuilder('c')
+        .relation(Comment, 'creator')
+        .of(c.id)
+        .set(user.userId);
+      const comment = await Comment.findOne(c.id);
+      return { code: 200, data: comment };
+    } catch (error) {
+      return { code: 500, message: error.toString() };
+    }
+  }
+
+  @Get(':appraisalId/comments')
+  async getCommentsByappraisalId(@Param('appraisalId') id: string) {
+    const comments = await Comment.find({
+      where: { bindAppraisal: id },
+      order: { createdAt: 'DESC' },
+      relations: ['creator'],
+    });
+    return { code: 200, data: comments };
   }
 }

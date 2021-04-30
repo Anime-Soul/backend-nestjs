@@ -1,8 +1,10 @@
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, Max, Min } from 'class-validator';
+import { IsNotEmpty, Length, Max, Min } from 'class-validator';
 
 export class OptionalAppraisalField {
-  title?: string;
+  @IsNotEmpty()
+  @Length(4, 20)
+  title: string;
 
   @IsNotEmpty()
   content: string;

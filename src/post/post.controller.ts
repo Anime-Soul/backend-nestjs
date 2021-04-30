@@ -57,18 +57,6 @@ export class PostController {
     const { offset = 0, limit = 15, type = 0, title, sort, creatorId } = body;
     const _sort: OrderByCondition = {};
 
-    switch (sort) {
-      case 'hot':
-        _sort['p.view'] = 'DESC';
-
-      // TODO:
-      // _sort['p.liker'] = 'DESC';
-      // _sort['p.comments'] = 'DESC';
-      default:
-        break;
-    }
-    _sort['p.createdAt'] = 'DESC'; // 就近原则
-
     if (title) {
       if (type == POST_TYPE.VIDEO) {
         rep.where('p.title like :title', {
@@ -96,16 +84,29 @@ export class PostController {
         't',
         'c',
         // 'a.rate',
-        // 'lk.id',
-        // 'AVG(a.rate) rate', // 这里拿不到去详情页在请求吧
+        // 'AVG(a.rate) rate', // 这里拿不到去详情页在请求吧 放到子查询 比如 hot 排序里面
       ])
       .leftJoin('p.creator', 'u')
       .leftJoin('p.categories', 'c')
       .leftJoin('p.tags', 't')
       // .leftJoin('p.appraisals', 'a') // 这里拿不到去详情页在请求吧
-      .loadRelationCountAndMap('p.commentCount', 'p.comments', 'cm')
-      .loadRelationCountAndMap('p.videoCount', 'p.videos', 'v')
-      .loadRelationCountAndMap('p.likerCount', 'p.liker', 'l');
+      .loadRelationCountAndMap('p.commentCount', 'p.comments')
+      .loadRelationCountAndMap('p.videoCount', 'p.videos')
+      .loadRelationCountAndMap('p.likerCount', 'p.liker');
+
+    // github.com/typeorm/typeorm/issues/6561
+    switch (sort) {
+      case 'hot':
+        qb.addSelect('COUNT(cm.id)', 'commentCount')
+          .leftJoin('p.comments', 'cm')
+          .addSelect('COUNT(lk.id)', 'likerCount')
+          .leftJoin('p.liker', 'lk');
+        _sort['commentCount'] = 'DESC';
+        _sort['likerCount'] = 'DESC';
+      default:
+        break;
+    }
+    _sort['p.createdAt'] = 'DESC'; // 就近原则
 
     if (req.headers.authorization) {
       const user: any = new JwtService({
@@ -114,12 +115,12 @@ export class PostController {
 
       user?.userId &&
         qb
-          .leftJoin('p.liker', 'lk', 'lk.id=:id', {
+          .leftJoin('p.liker', 'lk2', 'lk2.id=:id', {
             id: user.userId,
           })
-          .addSelect('lk.id');
+          .addSelect('lk2.id');
     }
-
+    // 不生效
     //   .addSelect(
     //   'IF(ISNULL(lk.id),0,1) AS is_star',
     // );
@@ -128,10 +129,10 @@ export class PostController {
       .skip(offset * limit)
       .take(limit)
       .orderBy(_sort)
-      // .groupBy('p.id, c.id, t.id') //avg 需要这个
+      .groupBy('p.id, c.id, t.id, lk.id, lk2.id')
       .getMany();
 
-    let result = raw.map((_) => {
+    const result = raw.map((_) => {
       if (_?.liker?.length > 0) {
         _.isLike = 1;
       } else {
@@ -141,9 +142,9 @@ export class PostController {
       return _;
     });
 
-    if (type == POST_TYPE.VIDEO) {
-      result = result.filter((_) => _.videoCount > 0);
-    }
+    // if (type == POST_TYPE.VIDEO) {
+    //   result = result.filter((_) => _.videoCount > 0);
+    // }
 
     return { code: 200, data: result };
   }

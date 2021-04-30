@@ -2,9 +2,11 @@ import {
   BaseEntity,
   Column,
   CreateDateColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import User from './User';
 
 export default class extends BaseEntity {
   @PrimaryGeneratedColumn('increment')
@@ -21,4 +23,9 @@ export default class extends BaseEntity {
 
   @Column()
   code: string;
+
+  @ManyToOne(() => User, (u) => u.regCode, {
+    onDelete: 'CASCADE',
+  })
+  ower: User;
 }

@@ -18,6 +18,8 @@ export class SignUpDto {
   username?: string;
 
   imei?: string;
+
+  regCode?: string;
 }
 
 export class SignInDto {

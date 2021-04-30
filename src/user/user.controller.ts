@@ -19,6 +19,7 @@ import { UserService } from './user.service';
 import { IReq, ROLESMAP } from 'src/type';
 import RegCode from 'src/entity/RegCode';
 import * as crypto from 'crypto';
+import { Roles } from 'src/common/decorators/roles.decorator';
 
 @Controller('user')
 export class UserController {
@@ -82,23 +83,14 @@ export class UserController {
     return { code: m ? 200 : 404, data: m };
   }
 
+  @Roles(ROLESMAP.ROOT)
   @Get('gen-code')
   async genCode(@Req() { user }: IReq, @Query('num') num: number) {
     if (user.role != ROLESMAP.ROOT) {
       return new UnauthorizedException();
     }
-    const list = [];
-    for (let index = 0; index < num; index++) {
-      list.push(
-        (
-          await RegCode.create({
-            status: 0,
-            code: crypto.randomBytes(8).toString(),
-          }).save()
-        ).id,
-      );
-    }
+    const code = await this.userService.genReCode(user.userId, num);
 
-    return list;
+    return { code: 200, data: code };
   }
 }
