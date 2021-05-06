@@ -53,9 +53,13 @@ export class PostController {
   @Public()
   @Get('list')
   async list(@Query() body: QueryPostsArgs, @Req() req: IReq) {
-    const rep = this.PostRepository.createQueryBuilder('p');
     const { offset = 0, limit = 15, type = 0, title, sort, creatorId } = body;
     const _sort: OrderByCondition = {};
+    let groupBy = 'p.id, c.id, t.id';
+
+    const rep = this.PostRepository.createQueryBuilder(
+      'p',
+    ).andWhere('p.type=:type', { type });
 
     if (title) {
       if (type == POST_TYPE.VIDEO) {
@@ -68,8 +72,6 @@ export class PostController {
         });
       }
     }
-
-    if (type) rep.andWhere('p.type=:type', { type });
 
     if (creatorId) rep.andWhere('p.creatorId=:creatorId', { creatorId });
 
@@ -84,7 +86,7 @@ export class PostController {
         't',
         'c',
         // 'a.rate',
-        // 'AVG(a.rate) rate', // 这里拿不到去详情页在请求吧 放到子查询 比如 hot 排序里面
+        // 'AVG(a.rate) rate', // 这里拿不到去详情页在请求吧 或者放到子查询 比如 hot 排序里面
       ])
       .leftJoin('p.creator', 'u')
       .leftJoin('p.categories', 'c')
@@ -103,6 +105,7 @@ export class PostController {
           .leftJoin('p.liker', 'lk');
         _sort['commentCount'] = 'DESC';
         _sort['likerCount'] = 'DESC';
+        groupBy += ', lk.id, cm.id';
       default:
         break;
     }
@@ -118,7 +121,8 @@ export class PostController {
           .leftJoin('p.liker', 'lk2', 'lk2.id=:id', {
             id: user.userId,
           })
-          .addSelect('lk2.id');
+          .addSelect('lk2.id') &&
+        (groupBy += ', lk2.id');
     }
     // 不生效
     //   .addSelect(
@@ -129,7 +133,7 @@ export class PostController {
       .skip(offset * limit)
       .take(limit)
       .orderBy(_sort)
-      .groupBy('p.id, c.id, t.id, lk.id, lk2.id')
+      .groupBy(groupBy)
       .getMany();
 
     const result = raw.map((_) => {

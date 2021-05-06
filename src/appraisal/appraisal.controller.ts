@@ -45,6 +45,7 @@ export class AppraisalController {
     const rep = this.AppraisalRepository.createQueryBuilder('a');
     const { offset = 0, limit = 15, title, sort, creatorId } = body;
     const _sort: OrderByCondition = {};
+    let groupBy = 'a.id, u.id, p.id';
 
     if (title) {
       rep.where('a.title like :title', {
@@ -82,6 +83,7 @@ export class AppraisalController {
           .leftJoin('a.liker', 'lk');
         _sort['commentCount'] = 'DESC';
         _sort['likerCount'] = 'DESC';
+        groupBy += ', lk.id, cm.id';
       default:
         break;
     }
@@ -90,8 +92,8 @@ export class AppraisalController {
     const raw = await qb
       .skip(offset * limit)
       .take(limit)
-      .orderBy('a.id')
       .orderBy(_sort)
+      .groupBy(groupBy)
       .getMany();
 
     return { code: 200, data: raw };
