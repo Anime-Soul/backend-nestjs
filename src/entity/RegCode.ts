@@ -2,13 +2,15 @@ import {
   BaseEntity,
   Column,
   CreateDateColumn,
+  Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import User from './User';
 
-export default class extends BaseEntity {
+@Entity()
+export default class RegCode extends BaseEntity {
   @PrimaryGeneratedColumn('increment')
   id!: string;
 

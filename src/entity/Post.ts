@@ -34,7 +34,10 @@ export default class Post extends _BaseEntity {
   @Column({ type: 'int', default: 0 })
   view: number;
 
-  @ManyToOne(() => User, (user) => user.posts, { nullable: false })
+  @ManyToOne(() => User, (user) => user.posts, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   creator: User;
 
   @OneToMany(() => Video, (video) => video.bindPost)
@@ -53,10 +56,10 @@ export default class Post extends _BaseEntity {
   @JoinTable()
   tags?: Tag[];
 
-  @OneToMany(() => Comment, (comment) => comment.bindPost, { nullable: true })
+  @OneToMany(() => Comment, (c) => c.bindPost)
   comments?: Comment[];
 
-  @ManyToMany(() => User, (u) => u.like)
+  @ManyToMany(() => User, (u) => u.l_post)
   @JoinTable()
   liker?: User[];
 }

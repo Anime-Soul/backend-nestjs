@@ -38,17 +38,17 @@ export default class User extends _BaseEntity {
   @OneToMany(() => Post, (post) => post.creator)
   posts?: Post[];
 
-  @OneToMany(() => Appraisal, (appraisal) => appraisal.creator)
+  @OneToMany(() => Appraisal, (a) => a.creator)
   appraisals?: Appraisal[];
 
-  @OneToMany(() => Comment, (comment) => comment.creator)
+  @OneToMany(() => Comment, (c) => c.creator)
   comments?: Comment[];
 
   @ManyToMany(() => Post, (up) => up.liker)
-  like?: Post[];
+  l_post?: Post[];
 
   @ManyToMany(() => Appraisal, (la) => la.liker)
-  likeAppraisals?: Appraisal[];
+  l_appraisals?: Appraisal[];
 
   @OneToMany(() => RegCode, (r) => r.ower)
   regCode: RegCode;
