@@ -5,6 +5,7 @@ import Post from './Post';
 import _BaseEntity from './_BaseEntity';
 import Comment from './Comment';
 import RegCode from './RegCode';
+import { Topic } from './Topic';
 @Entity()
 export default class User extends _BaseEntity {
   @Column({ default: ROLESMAP.HUMAN, type: 'tinyint' })
@@ -52,4 +53,7 @@ export default class User extends _BaseEntity {
 
   @OneToMany(() => RegCode, (r) => r.ower)
   regCode: RegCode;
+
+  @OneToMany(() => Topic, (t) => t.creator)
+  topics: Topic[];
 }

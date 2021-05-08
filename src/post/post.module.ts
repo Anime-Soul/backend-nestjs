@@ -6,9 +6,9 @@ import Post from '../entity/Post';
 import Tag from '../entity/Tag';
 import User from '../entity/User';
 import Video from '../entity/Video';
-import Comment from '../entity/Comment';
 import { PostController } from './post.controller';
 import { PostService } from './post.service';
+import { Topic } from 'src/entity/Topic';
 
 @Module({
   imports: [
@@ -19,7 +19,7 @@ import { PostService } from './post.service';
       Appraisal,
       Category,
       Tag,
-      Comment,
+      Topic,
     ]),
   ],
   controllers: [PostController],

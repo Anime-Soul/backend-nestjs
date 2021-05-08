@@ -1,8 +1,8 @@
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import User from './User';
 import _BaseEntity from './_BaseEntity';
-import Post from './Post';
 import Appraisal from './Appraisal';
+import { Topic } from './Topic';
 
 @Entity()
 export default class Comment extends _BaseEntity {
@@ -10,11 +10,6 @@ export default class Comment extends _BaseEntity {
     onDelete: 'SET NULL',
   })
   creator: User;
-
-  @ManyToOne(() => Post, (p) => p.comments, {
-    onDelete: 'SET NULL',
-  })
-  bindPost: Post;
 
   @Column()
   content: string;
@@ -31,4 +26,9 @@ export default class Comment extends _BaseEntity {
     onDelete: 'SET NULL',
   })
   bindAppraisal?: Appraisal[];
+
+  @ManyToOne(() => Topic, (t) => t.comments, {
+    onDelete: 'SET NULL',
+  })
+  bindTopic?: Topic;
 }

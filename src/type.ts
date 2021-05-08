@@ -32,8 +32,8 @@ export interface IReq extends Request {
 }
 
 export enum POST_TYPE {
-  VIDEO = 0,
-  POST = 1,
+  VIDEO = 0, //
+  OVideo = 1, // 原创
 }
 
 export enum EVERT_STATUS {

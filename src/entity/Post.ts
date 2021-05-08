@@ -12,10 +12,15 @@ import Tag from './Tag';
 import User from './User';
 import Video from './Video';
 import _BaseEntity from './_BaseEntity';
-import Comment from './Comment';
+import { POST_TYPE } from 'src/type';
+import { Topic } from './Topic';
 
 @Entity()
 export default class Post extends _BaseEntity {
+  rate: number;
+  hasAppr: number;
+  isLike: number;
+
   @Column()
   title: string;
 
@@ -28,11 +33,19 @@ export default class Post extends _BaseEntity {
   @Column({ nullable: true })
   cover?: string;
 
-  @Column({ default: 0, type: 'tinyint' })
+  @Column({ default: POST_TYPE.VIDEO, type: 'tinyint' }) // 0 movie 1 原创 | 剪辑
   type: number;
 
   @Column({ type: 'int', default: 0 })
   view: number;
+
+  @OneToMany(() => Post, (p) => p.parent)
+  children: Post[];
+
+  @ManyToOne(() => Post, (p) => p.children, {
+    onDelete: 'SET NULL',
+  })
+  parent: Post;
 
   @ManyToOne(() => User, (user) => user.posts, {
     nullable: true,
@@ -41,25 +54,23 @@ export default class Post extends _BaseEntity {
   creator: User;
 
   @OneToMany(() => Video, (video) => video.bindPost)
-  videos?: Video[];
-
-  rate: number;
+  videos: Video[];
 
   @OneToMany(() => Appraisal, (appraisals) => appraisals.bindPost)
-  appraisals?: Appraisal[];
+  appraisals: Appraisal[];
 
   @ManyToMany(() => Category, (c) => c.posts, { nullable: true })
   @JoinTable()
-  categories?: Category[];
+  categories: Category[];
 
   @ManyToMany(() => Tag, (t) => t.posts, { nullable: true })
   @JoinTable()
-  tags?: Tag[];
+  tags: Tag[];
 
-  @OneToMany(() => Comment, (c) => c.bindPost)
-  comments?: Comment[];
+  @OneToMany(() => Topic, (t) => t.bindPost)
+  topics: Topic[];
 
   @ManyToMany(() => User, (u) => u.l_post)
   @JoinTable()
-  liker?: User[];
+  liker: User[];
 }

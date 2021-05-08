@@ -21,10 +21,10 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { ExRoles, Roles } from '../common/decorators/roles.decorator';
 import { Public } from '../common/decorators/auth.decorator';
 import { SqlQueryErrorRes } from '../common/util/sql.error.response';
-import Comment from '../entity/Comment';
 import Appraisal from '../entity/Appraisal';
 import Video from '../entity/Video';
 import { JwtService } from '@nestjs/jwt';
+import { Topic } from 'src/entity/Topic';
 
 @Controller('post')
 @UseGuards(RolesGuard)
@@ -35,8 +35,8 @@ export class PostController {
     private readonly PostRepository: Repository<Post>,
     @InjectRepository(Video)
     private readonly VideoRepository: Repository<Video>,
-    @InjectRepository(Comment)
-    private CommentRepository: Repository<Comment>,
+    @InjectRepository(Topic)
+    private CommentRepository: Repository<Topic>,
     @InjectRepository(Appraisal)
     private AppraisalRepository: Repository<Appraisal>,
   ) {}
@@ -44,38 +44,35 @@ export class PostController {
   @P()
   @ExRoles([ROLESMAP.Blocked])
   create(@Body() params: CreatePostArgs, @Req() { user }) {
-    return {
-      code: HttpStatus.CREATED,
-      data: this.postService.create({ creatorId: user.userId, ...params }),
-    };
+    return this.postService.create({ creatorId: user.userId, ...params });
   }
 
   @Public()
   @Get('list')
   async list(@Query() body: QueryPostsArgs, @Req() req: IReq) {
-    const { offset = 0, limit = 15, type = 0, title, sort, creatorId } = body;
+    const {
+      offset = 0,
+      limit = 15,
+      type = POST_TYPE.VIDEO,
+      title,
+      sort,
+      creatorId,
+    } = body;
     const _sort: OrderByCondition = {};
-    let groupBy = 'p.id, c.id, t.id';
+    let groupBy = 'p.id, c.id, t.id, a.id';
 
     const rep = this.PostRepository.createQueryBuilder(
       'p',
     ).andWhere('p.type=:type', { type });
 
     if (title) {
-      if (type == POST_TYPE.VIDEO) {
-        rep.where('p.title like :title', {
-          title: `%${title}%`,
-        });
-      } else if (type == POST_TYPE.POST) {
-        rep.where('p.content like :content', {
-          content: `%${title}%`,
-        });
-      }
+      rep.where('p.title like :title', {
+        title: `%${title}%`,
+      });
     }
 
     if (creatorId) rep.andWhere('p.creatorId=:creatorId', { creatorId });
 
-    // https://blog.csdn.net/qq_34637782/article/details/101029487
     const qb = rep
       .select([
         'p',
@@ -85,27 +82,32 @@ export class PostController {
         'u.avatar',
         't',
         'c',
-        // 'a.rate',
-        // 'AVG(a.rate) rate', // 这里拿不到去详情页在请求吧 或者放到子查询 比如 hot 排序里面
+        'a.id',
+        'a.rate',
       ])
       .leftJoin('p.creator', 'u')
       .leftJoin('p.categories', 'c')
       .leftJoin('p.tags', 't')
-      // .leftJoin('p.appraisals', 'a') // 这里拿不到去详情页在请求吧
-      .loadRelationCountAndMap('p.commentCount', 'p.comments')
+      .leftJoin('p.appraisals', 'a')
+      .loadRelationCountAndMap('p.topicCount', 'p.topics')
       .loadRelationCountAndMap('p.videoCount', 'p.videos')
+      // .loadRelationCountAndMap('p.appraisalCount', 'p.appraisals')
       .loadRelationCountAndMap('p.likerCount', 'p.liker');
 
     // github.com/typeorm/typeorm/issues/6561
     switch (sort) {
       case 'hot':
-        qb.addSelect('COUNT(cm.id)', 'commentCount')
-          .leftJoin('p.comments', 'cm')
+        qb.addSelect('COUNT(tp.id)', 'topicCount')
+          .leftJoin('p.topics', 'tp')
           .addSelect('COUNT(lk.id)', 'likerCount')
           .leftJoin('p.liker', 'lk');
-        _sort['commentCount'] = 'DESC';
+        _sort['topicCount'] = 'DESC';
         _sort['likerCount'] = 'DESC';
         groupBy += ', lk.id, cm.id';
+      case 'rate':
+        qb.addSelect('SUM(ap.rate)', 'arate').leftJoin('p.appraisals', 'ap');
+        _sort['arate'] = 'DESC';
+        groupBy += ', ap.id';
       default:
         break;
     }
@@ -115,21 +117,20 @@ export class PostController {
       const user: any = new JwtService({
         secret: process.env.JWT_SECRET,
       }).decode(req.headers.authorization.substring(7));
+      if (user.userId) {
+        qb.leftJoin('p.liker', 'lk2', 'lk2.id=:id', {
+          id: user.userId,
+        }).addSelect('lk2.id');
 
-      user?.userId &&
-        qb
-          .leftJoin('p.liker', 'lk2', 'lk2.id=:id', {
-            id: user.userId,
-          })
-          .addSelect('lk2.id') &&
-        (groupBy += ', lk2.id');
+        groupBy += ', lk2.id';
+      }
     }
     // 不生效
     //   .addSelect(
     //   'IF(ISNULL(lk.id),0,1) AS is_star',
     // );
 
-    const raw: Array<any> = await qb
+    const raw: Array<Post> = await qb
       .skip(offset * limit)
       .take(limit)
       .orderBy(_sort)
@@ -137,18 +138,14 @@ export class PostController {
       .getMany();
 
     const result = raw.map((_) => {
-      if (_?.liker?.length > 0) {
-        _.isLike = 1;
-      } else {
-        _.isLike = 0;
-      }
+      _.isLike = _.liker?.length > 0 ? 1 : 0;
+      _.rate =
+        _.appraisals.reduce((p, c) => p + c.rate, 0) / _.appraisals.length || 0;
+
+      delete _.appraisals;
       delete _.liker;
       return _;
     });
-
-    // if (type == POST_TYPE.VIDEO) {
-    //   result = result.filter((_) => _.videoCount > 0);
-    // }
 
     return { code: 200, data: result };
   }
@@ -158,9 +155,9 @@ export class PostController {
     const post = await this.PostRepository.createQueryBuilder('p')
       .where('p.id = :pid', { pid: id })
       .leftJoinAndSelect('p.creator', 'u')
-      .loadRelationCountAndMap('p.commentCount', 'p.comments', 'cm')
-      .loadRelationCountAndMap('p.videoCount', 'p.videos', 'v')
-      .loadRelationCountAndMap('p.likerCount', 'p.liker', 'l')
+      .loadRelationCountAndMap('p.topicCount', 'p.topics')
+      .loadRelationCountAndMap('p.videoCount', 'p.videos')
+      .loadRelationCountAndMap('p.likerCount', 'p.liker')
       .getOne();
 
     if (!post) return { code: 404 };
@@ -238,14 +235,14 @@ export class PostController {
         content: body.content,
       }).save();
       await this.PostRepository.createQueryBuilder('p')
-        .relation(Post, 'comments')
+        .relation(Post, 'topics')
         .of(id)
         .add(c.id);
       await this.CommentRepository.createQueryBuilder('c')
-        .relation(Comment, 'creator')
+        .relation(Topic, 'creator')
         .of(c.id)
         .set(user.userId);
-      const comment = await Comment.findOne(c.id);
+      const comment = await this.CommentRepository.findOne(c.id);
       return { code: 200, data: comment };
     } catch (error) {
       return { code: 500, message: error.toString() };
@@ -258,13 +255,13 @@ export class PostController {
     const comments = await this.CommentRepository.find({
       where: { bindPost: id },
       order: { createdAt: 'DESC' },
-      relations: ['creator'],
+      relations: ['creator', 'children'],
     });
     return { code: 200, data: comments };
   }
 
   //TODO 分页
-  @Get(':postId/appraisal')
+  @Get(':postId/appraisals')
   async getAppraisalsByPostId(@Param('postId') id: string) {
     const { appraisals } = await this.PostRepository.findOne(id, {
       relations: ['appraisals'],

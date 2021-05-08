@@ -11,6 +11,7 @@ import { CategoryModule } from './category/category.module';
 import { AppController } from './app.controller';
 import { CommentModule } from './comment/comment.module';
 import { AppraisalModule } from './appraisal/appraisal.module';
+import { TopicModule } from './topic/topic.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AppraisalModule } from './appraisal/appraisal.module';
     CategoryModule,
     CommentModule,
     AppraisalModule,
+    TopicModule,
   ],
   providers: [],
   controllers: [AppController],
