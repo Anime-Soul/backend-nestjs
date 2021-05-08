@@ -14,6 +14,8 @@ import Post from './Post';
 
 @Entity()
 export class Topic extends _BaseEntity {
+  isLike: number;
+
   @Column({ nullable: true })
   title?: string;
 

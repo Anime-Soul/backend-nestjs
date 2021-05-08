@@ -15,6 +15,5 @@ export class OptionalAppraisalField {
   @Transform((value) => Number.parseInt(value.value))
   rate: number;
 
-  @IsNotEmpty()
-  postId: string;
+  postId?: string;
 }

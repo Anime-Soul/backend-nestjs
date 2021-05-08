@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrderByCondition, Repository } from 'typeorm';
-import { CreatePostArgs, QueryPostsArgs, CommentDto } from './post.dto';
+import { CreatePostArgs, QueryPostsArgs } from './post.dto';
 import { PostService } from './post.service';
 import Post from '../entity/Post';
 import { IReq, POST_TYPE, ROLESMAP } from '../type';
@@ -25,6 +25,9 @@ import Appraisal from '../entity/Appraisal';
 import Video from '../entity/Video';
 import { JwtService } from '@nestjs/jwt';
 import { Topic } from 'src/entity/Topic';
+import { subMonths } from 'date-fns';
+import { OptionalAppraisalField } from 'src/appraisal/appraisal.dto';
+import { OptionalTopicField } from 'src/topic/topic.dto';
 
 @Controller('post')
 @UseGuards(RolesGuard)
@@ -36,7 +39,7 @@ export class PostController {
     @InjectRepository(Video)
     private readonly VideoRepository: Repository<Video>,
     @InjectRepository(Topic)
-    private CommentRepository: Repository<Topic>,
+    private topicRepository: Repository<Topic>,
     @InjectRepository(Appraisal)
     private AppraisalRepository: Repository<Appraisal>,
   ) {}
@@ -91,23 +94,35 @@ export class PostController {
       .leftJoin('p.appraisals', 'a')
       .loadRelationCountAndMap('p.topicCount', 'p.topics')
       .loadRelationCountAndMap('p.videoCount', 'p.videos')
-      // .loadRelationCountAndMap('p.appraisalCount', 'p.appraisals')
+      .loadRelationCountAndMap('p.appraisalCount', 'p.appraisals')
       .loadRelationCountAndMap('p.likerCount', 'p.liker');
 
     // github.com/typeorm/typeorm/issues/6561
     switch (sort) {
       case 'hot':
-        qb.addSelect('COUNT(tp.id)', 'topicCount')
+        qb.addSelect('COUNT(a.id)', 'aCount')
+          .leftJoin('p.appraisals', 'ap')
+          .addSelect('COUNT(tp.id)', 'topicCount')
           .leftJoin('p.topics', 'tp')
           .addSelect('COUNT(lk.id)', 'likerCount')
           .leftJoin('p.liker', 'lk');
+
+        _sort['aCount'] = 'DESC';
         _sort['topicCount'] = 'DESC';
         _sort['likerCount'] = 'DESC';
-        groupBy += ', lk.id, cm.id';
+        groupBy += ', lk.id, tp.id';
+        break;
       case 'rate':
-        qb.addSelect('SUM(ap.rate)', 'arate').leftJoin('p.appraisals', 'ap');
+        qb.addSelect('SUM(a.rate)', 'arate').leftJoin('p.appraisals', 'aaa');
         _sort['arate'] = 'DESC';
-        groupBy += ', ap.id';
+        break;
+      case 'month': // 本月新上线
+        const date = new Date();
+        qb.andWhere('p.createdAt BETWEEN  :s AND :e', {
+          s: subMonths(date, 1),
+          e: date,
+        });
+        break;
       default:
         break;
     }
@@ -139,8 +154,9 @@ export class PostController {
 
     const result = raw.map((_) => {
       _.isLike = _.liker?.length > 0 ? 1 : 0;
-      _.rate =
-        _.appraisals.reduce((p, c) => p + c.rate, 0) / _.appraisals.length || 0;
+      _.rate = +(
+        _.appraisals.reduce((p, c) => p + c.rate, 0) / _.appraisals.length || 0
+      ).toFixed(1);
 
       delete _.appraisals;
       delete _.liker;
@@ -224,25 +240,24 @@ export class PostController {
 
   @P(':postId/comment')
   async comment(
-    @Body() { ...body }: CommentDto,
+    @Body() { title, content }: OptionalTopicField,
     @Req() { user },
     @Param('postId') id: string,
   ) {
     try {
       const p = await this.PostRepository.findOne(id, { select: ['status'] });
-      if (!p || p.status < 0) return { code: 403, message: '宿主被屏蔽' };
-      const c = await this.CommentRepository.create({
-        content: body.content,
-      }).save();
+      if (!p || p.status < 0) return { code: 403, message: '宿主异常' };
+      const c = await this.topicRepository.create({ title, content }).save();
       await this.PostRepository.createQueryBuilder('p')
         .relation(Post, 'topics')
         .of(id)
         .add(c.id);
-      await this.CommentRepository.createQueryBuilder('c')
+      await this.topicRepository
+        .createQueryBuilder('c')
         .relation(Topic, 'creator')
         .of(c.id)
         .set(user.userId);
-      const comment = await this.CommentRepository.findOne(c.id);
+      const comment = await this.topicRepository.findOne(c.id);
       return { code: 200, data: comment };
     } catch (error) {
       return { code: 500, message: error.toString() };
@@ -252,12 +267,26 @@ export class PostController {
   //TODO 分页
   @Get(':postId/comments')
   async getCommentsByPostId(@Param('postId') id: string) {
-    const comments = await this.CommentRepository.find({
+    const comments = await this.topicRepository.find({
       where: { bindPost: id },
       order: { createdAt: 'DESC' },
-      relations: ['creator', 'children'],
+      relations: ['creator'],
     });
     return { code: 200, data: comments };
+  }
+
+  @P(':postId/appraisal')
+  async appr(
+    @Param('postId') id: string,
+    @Req() { user }: IReq,
+    @Body() body: OptionalAppraisalField,
+  ) {
+    const data = await this.AppraisalRepository.create({
+      creator: { id: user.userId },
+      bindPost: { id },
+      ...body,
+    }).save();
+    return { code: HttpStatus.CREATED, data };
   }
 
   //TODO 分页
