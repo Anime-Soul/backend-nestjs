@@ -14,8 +14,8 @@ export default class User extends _BaseEntity {
   @Column({ nullable: true, select: false })
   resetPWDToken?: string;
 
-  @Column({ length: 12, unique: true, nullable: true })
-  username?: string;
+  @Column({ length: 12, unique: true })
+  username: string;
 
   @Column({ unique: true })
   email: string;
@@ -27,11 +27,10 @@ export default class User extends _BaseEntity {
   token?: string;
 
   @Column({
-    nullable: true,
     default:
       'https://ae01.alicdn.com/kf/Hfa4561650386480f884450d0eb82a3eaZ.png',
   })
-  avatar?: string;
+  avatar: string;
 
   @Column({ nullable: true, type: 'varchar', default: 'WHAT"S ANIMESOUL ?' })
   bio?: string;
@@ -46,7 +45,7 @@ export default class User extends _BaseEntity {
   comments?: Comment[];
 
   @ManyToMany(() => Post, (up) => up.liker)
-  l_post?: Post[];
+  l_post: Post[];
 
   @ManyToMany(() => Appraisal, (la) => la.liker)
   l_appraisals?: Appraisal[];

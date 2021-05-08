@@ -25,7 +25,7 @@ export default class Comment extends _BaseEntity {
   @ManyToOne(() => Appraisal, (a) => a.comments, {
     onDelete: 'SET NULL',
   })
-  bindAppraisal?: Appraisal[];
+  bindAppraisal?: Appraisal;
 
   @ManyToOne(() => Topic, (t) => t.comments, {
     onDelete: 'SET NULL',

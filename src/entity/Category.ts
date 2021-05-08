@@ -13,6 +13,6 @@ export default class Category extends _BaseEntity {
   @Column()
   creatorId: string;
 
-  @ManyToMany(() => Post, (p) => p.categories, { nullable: true })
-  posts?: Post[];
+  @ManyToMany(() => Post, (p) => p.categories)
+  posts: Post[];
 }

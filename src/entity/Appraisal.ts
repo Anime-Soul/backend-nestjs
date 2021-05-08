@@ -25,20 +25,20 @@ export default class Appraisal extends _BaseEntity {
   @Column({ type: 'tinyint', default: 0 })
   isWatched: number;
 
-  @ManyToOne(() => Post, (post) => post.appraisals, {
+  @ManyToOne(() => Post, (p) => p.appraisals, {
     onDelete: 'SET NULL',
   })
   bindPost: Post;
 
-  @ManyToOne(() => User, (user) => user.appraisals, {
+  @ManyToOne(() => User, (u) => u.appraisals, {
     onDelete: 'SET NULL',
   })
   creator: User;
 
-  @OneToMany(() => Comment, (comment) => comment.bindAppraisal)
-  comments?: Comment[];
+  @OneToMany(() => Comment, (c) => c.bindAppraisal)
+  comments: Comment[];
 
   @ManyToMany(() => User, (u) => u.l_appraisals)
   @JoinTable()
-  liker?: User[];
+  liker: User[];
 }
