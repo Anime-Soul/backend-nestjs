@@ -1,6 +1,6 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { fail } from './common/util/res.wrap';
-import * as fetch from 'node-fetch';
+import fetch from 'node-fetch';
 
 const wasm = async (req: Request, res: Response) => {
   const u = req.body?.url as string;

@@ -46,4 +46,7 @@ export class Topic extends _BaseEntity {
     onDelete: 'SET NULL',
   })
   bindPost: Post;
+
+  @Column('tinyint', { default: 0 })
+  isPin: number;
 }

@@ -31,4 +31,7 @@ export default class Comment extends _BaseEntity {
     onDelete: 'SET NULL',
   })
   bindTopic?: Topic;
+
+  @Column('tinyint', { default: 0 })
+  isPin: number;
 }

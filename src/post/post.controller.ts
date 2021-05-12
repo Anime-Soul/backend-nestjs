@@ -97,6 +97,9 @@ export class PostController {
       .loadRelationCountAndMap('p.appraisalCount', 'p.appraisals')
       .loadRelationCountAndMap('p.likerCount', 'p.liker');
 
+    if (type == POST_TYPE.VIDEO)
+      qb.loadRelationCountAndMap('p.childrenCount', 'p.children');
+
     // github.com/typeorm/typeorm/issues/6561
     switch (sort) {
       case 'hot':
@@ -106,6 +109,11 @@ export class PostController {
           .leftJoin('p.topics', 'tp')
           .addSelect('COUNT(lk.id)', 'likerCount')
           .leftJoin('p.liker', 'lk');
+
+        if (type == POST_TYPE.VIDEO) {
+          qb.addSelect('COUNT(ch.id)', 'chCount').leftJoin('p.children', 'ch');
+          _sort['chCount'] = 'DESC';
+        }
 
         _sort['aCount'] = 'DESC';
         _sort['topicCount'] = 'DESC';
@@ -174,6 +182,7 @@ export class PostController {
       .loadRelationCountAndMap('p.topicCount', 'p.topics')
       .loadRelationCountAndMap('p.videoCount', 'p.videos')
       .loadRelationCountAndMap('p.likerCount', 'p.liker')
+      .loadRelationCountAndMap('p.childrenCount', 'p.children')
       .getOne();
 
     if (!post) return { code: 404 };
@@ -184,7 +193,7 @@ export class PostController {
       .select('AVG(a.rate)', 'rate')
       .getRawOne<{ rate: string }>();
 
-    post.rate = rate ? parseInt(rate) : 0;
+    post.rate = parseInt(rate) ?? 0;
 
     this.postService.glance(id);
 
