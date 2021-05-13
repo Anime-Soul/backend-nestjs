@@ -49,13 +49,18 @@ export class TopicController {
   @Public()
   @Get('s')
   async list(@Query() body: QueryPostsArgs, @Req() req: IReq) {
-    const { offset = 0, limit = 15, title, sort, creatorId } = body;
-    const rep = this.topicRepository.createQueryBuilder('t');
+    const { offset = 0, limit = 15, title, sort, creatorId, type } = body;
+    const rep = this.topicRepository
+      .createQueryBuilder('t')
+      .andWhere('p.type=:type', { type });
     const _sort: OrderByCondition = {};
     let groupBy = 't.id, tag.id';
 
     if (title) {
-      rep.where('t.content like :content', {
+      rep.andWhere('t.title like :title', {
+        title: `%${title}%`,
+      });
+      rep.orWhere('t.content like :content', {
         content: `%${title}%`,
       });
     }

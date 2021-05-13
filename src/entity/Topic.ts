@@ -11,10 +11,17 @@ import User from './User';
 import _BaseEntity from './_BaseEntity';
 import Comment from './Comment';
 import Post from './Post';
+import { TOPIC_TYPE } from 'src/type';
 
 @Entity()
 export class Topic extends _BaseEntity {
   isLike: number;
+
+  @Column({ type: 'tinyint', nullable: true })
+  rate?: number;
+
+  @Column('tinyint', { default: TOPIC_TYPE.TOPIC })
+  type: number;
 
   @Column({ nullable: true })
   title?: string;

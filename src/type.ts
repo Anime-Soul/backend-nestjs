@@ -36,6 +36,11 @@ export enum POST_TYPE {
   OVideo = 1, // 原创
 }
 
+export enum TOPIC_TYPE {
+  TOPIC = 0,
+  APPRAISAL = 1,
+}
+
 export enum EVERT_STATUS {
   OK = 1,
   BLOCKED = 0,

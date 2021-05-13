@@ -25,6 +25,9 @@ export default class Appraisal extends _BaseEntity {
   @Column({ type: 'tinyint', default: 0 })
   isWatched: number;
 
+  @Column({ type: 'int', default: 0 })
+  view: number;
+
   @ManyToOne(() => Post, (p) => p.appraisals, {
     onDelete: 'SET NULL',
   })
