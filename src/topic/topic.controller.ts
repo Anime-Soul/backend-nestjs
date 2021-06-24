@@ -37,6 +37,7 @@ export class TopicController {
     const data = await this.topicRepository
       .create({
         creator: { id: user.userId },
+        bindPost: { id: params.postId },
         ...params,
       })
       .save();
@@ -49,10 +50,8 @@ export class TopicController {
   @Public()
   @Get('s')
   async list(@Query() body: QueryPostsArgs, @Req() req: IReq) {
-    const { offset = 0, limit = 15, title, sort, creatorId, type } = body;
-    const rep = this.topicRepository
-      .createQueryBuilder('t')
-      .andWhere('p.type=:type', { type });
+    const { offset = 0, limit = 15, title, sort, creatorId } = body;
+    const rep = this.topicRepository.createQueryBuilder('t');
     const _sort: OrderByCondition = {};
     let groupBy = 't.id, tag.id';
 
@@ -94,7 +93,7 @@ export class TopicController {
       const user: any = new JwtService({
         secret: process.env.JWT_SECRET,
       }).decode(req.headers.authorization.substring(7));
-      if (user.userId) {
+      if (user?.userId) {
         qb.leftJoin('t.liker', 'lk2', 'lk2.id=:id', {
           id: user.userId,
         }).addSelect('lk2.id');
@@ -133,7 +132,7 @@ export class TopicController {
       }).save();
       await this.topicRepository
         .createQueryBuilder('t')
-        .relation(Topic, 'topics')
+        .relation(Topic, 'comments')
         .of(id)
         .add(c.id);
       await this.CommentRepository.createQueryBuilder('c')

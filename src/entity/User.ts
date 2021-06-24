@@ -1,7 +1,7 @@
 import { ROLESMAP } from 'src/type';
 import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
-import Appraisal from './Appraisal';
 import Post from './Post';
+import Appraisal from './Appraisal';
 import _BaseEntity from './_BaseEntity';
 import Comment from './Comment';
 import RegCode from './RegCode';
@@ -48,7 +48,10 @@ export default class User extends _BaseEntity {
   l_post: Post[];
 
   @ManyToMany(() => Appraisal, (la) => la.liker)
-  l_appraisals?: Appraisal[];
+  l_appraisals: Appraisal[];
+
+  @ManyToMany(() => Topic, (t) => t.liker)
+  l_topic: Topic[];
 
   @OneToMany(() => RegCode, (r) => r.ower)
   regCode: RegCode;

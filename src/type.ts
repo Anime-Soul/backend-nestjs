@@ -32,16 +32,16 @@ export interface IReq extends Request {
 }
 
 export enum POST_TYPE {
-  VIDEO = 0, //
-  OVideo = 1, // 原创
+  VIDEO = 0, // 上映电影
+  UGC = 1, // 原创 | 剪辑 | UGC
 }
 
 export enum TOPIC_TYPE {
-  TOPIC = 0,
-  APPRAISAL = 1,
+  TOPIC = 0, // 讨论
+  APPRAISAL = 1, // 评鉴
 }
 
-export enum EVERT_STATUS {
+export enum EVERY_STATUS {
   OK = 1,
   BLOCKED = 0,
   DELECTED = -1,

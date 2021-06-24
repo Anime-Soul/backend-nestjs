@@ -14,7 +14,7 @@ import { ExRoles } from 'src/common/decorators/roles.decorator';
 import Appraisal from 'src/entity/Appraisal';
 import Comment from 'src/entity/Comment';
 import { CommentDto, QueryPostsArgs } from 'src/post/post.dto';
-import { EVERT_STATUS, ROLESMAP } from 'src/type';
+import { EVERY_STATUS, ROLESMAP } from 'src/type';
 import { OrderByCondition, Repository } from 'typeorm';
 import { OptionalAppraisalField } from './appraisal.dto';
 
@@ -59,7 +59,7 @@ export class AppraisalController {
     if (creatorId) rep.andWhere('a.creatorId=:creatorId', { creatorId });
 
     const qb = rep
-      .where('a.status>:status', { status: EVERT_STATUS.BLOCKED })
+      .where('a.status>:status', { status: EVERY_STATUS.BLOCKED })
       .select([
         'a',
         'p.id',

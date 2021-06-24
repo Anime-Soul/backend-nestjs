@@ -31,9 +31,9 @@ export default class Post extends _BaseEntity {
   content?: string;
 
   @Column({ nullable: true })
-  cover?: string;
+  cover?: string; // eg: https://1.png|https://2.png|https://3.png
 
-  @Column({ default: POST_TYPE.VIDEO, type: 'tinyint' }) // 0 movie 1 原创 | 剪辑
+  @Column({ default: POST_TYPE.VIDEO, type: 'tinyint' })
   type: number;
 
   @Column({ type: 'int', default: 0 })
@@ -58,7 +58,6 @@ export default class Post extends _BaseEntity {
 
   @OneToMany(() => Appraisal, (appraisals) => appraisals.bindPost)
   appraisals: Appraisal[];
-
   @ManyToMany(() => Category, (c) => c.posts, { nullable: true })
   @JoinTable()
   categories: Category[];

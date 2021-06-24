@@ -11,17 +11,10 @@ import User from './User';
 import _BaseEntity from './_BaseEntity';
 import Comment from './Comment';
 import Post from './Post';
-import { TOPIC_TYPE } from 'src/type';
 
 @Entity()
 export class Topic extends _BaseEntity {
   isLike: number;
-
-  @Column({ type: 'tinyint', nullable: true })
-  rate?: number;
-
-  @Column('tinyint', { default: TOPIC_TYPE.TOPIC })
-  type: number;
 
   @Column({ nullable: true })
   title?: string;
@@ -45,7 +38,7 @@ export class Topic extends _BaseEntity {
   @OneToMany(() => Comment, (c) => c.bindTopic)
   comments: Comment[];
 
-  @ManyToMany(() => User, (u) => u.l_post)
+  @ManyToMany(() => User, (u) => u.l_topic)
   @JoinTable()
   liker: User[];
 

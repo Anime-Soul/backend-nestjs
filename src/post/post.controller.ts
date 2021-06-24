@@ -64,12 +64,13 @@ export class PostController {
     const _sort: OrderByCondition = {};
     let groupBy = 'p.id, c.id, t.id, a.id';
 
-    const rep = this.PostRepository.createQueryBuilder(
-      'p',
-    ).andWhere('p.type=:type', { type });
+    const rep = this.PostRepository.createQueryBuilder('p').where(
+      'p.type=:type',
+      { type },
+    );
 
     if (title) {
-      rep.where('p.title like :title', {
+      rep.andWhere('p.title like :title', {
         title: `%${title}%`,
       });
     }
@@ -140,7 +141,7 @@ export class PostController {
       const user: any = new JwtService({
         secret: process.env.JWT_SECRET,
       }).decode(req.headers.authorization.substring(7));
-      if (user.userId) {
+      if (user?.userId) {
         qb.leftJoin('p.liker', 'lk2', 'lk2.id=:id', {
           id: user.userId,
         }).addSelect('lk2.id');

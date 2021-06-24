@@ -19,11 +19,11 @@ export class ExceptionFilterFilter<HttpException> implements ExceptionFilter {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     //@ts-ignore
     const exceptionRes: any = exception.getResponse();
-    const { error, message, code } = exceptionRes;
+    const { error, message } = exceptionRes;
 
     const msgLog = {
       status,
-      code,
+      code: status,
       timestamp: new Date().toISOString(),
       path: request.url,
       error,
